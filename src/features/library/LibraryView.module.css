@@ -80,9 +80,8 @@
 .listTitle {
   margin: 0 0 12px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 450;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: var(--color-muted);
 }
 
