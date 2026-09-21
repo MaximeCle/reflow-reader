@@ -4,9 +4,8 @@
   --color-muted: #6b6b6b;
   --color-line: #e5e5e5;
   --color-accent: #5d99f2;
-  --color-chrome: rgb(255 255 255 / 92%);
 
-  --reading-width: 580px;
+  --reading-width: 590px;
   --reading-font-size: 17px;
   --reading-line-height: 1.6;
   --paragraph-spacing: 1em;
@@ -25,7 +24,6 @@
   --color-muted: #9a9a9a;
   --color-line: #2a2a2a;
   --color-accent: #5d99f2;
-  --color-chrome: rgb(10 10 10 / 92%);
 }
 
 @media (prefers-reduced-motion: reduce) {

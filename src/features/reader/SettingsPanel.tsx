@@ -1,5 +1,6 @@
 import { useAtom } from 'jotai'
 import { Moon, Sun } from 'lucide-react'
+import { useEffect, useRef } from 'react'
 import { settingsAtom } from '../../atoms/settings'
 import { MAX_FONT_SIZE, MIN_FONT_SIZE } from '../../lib/storage/settings'
 import styles from './SettingsPanel.module.css'
@@ -10,16 +11,30 @@ interface SettingsPanelProps {
 
 export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const [settings, update] = useAtom(settingsAtom)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as Element | null
+      // The toggle button closes the panel itself; closing here too would
+      // reopen it on the click that follows.
+      if (ref.current?.contains(target ?? null) || target?.closest('[data-settings-toggle]')) return
+      onClose()
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+
+    window.addEventListener('pointerdown', onPointerDown, true)
+    window.addEventListener('keydown', onKeyDown)
+    return () => {
+      window.removeEventListener('pointerdown', onPointerDown, true)
+      window.removeEventListener('keydown', onKeyDown)
+    }
+  }, [onClose])
 
   return (
-    <div
-      className={styles.panel}
-      role="dialog"
-      aria-label="Réglages de lecture"
-      onKeyDown={(event) => {
-        if (event.key === 'Escape') onClose()
-      }}
-    >
+    <div ref={ref} className={styles.panel} role="dialog" aria-label="Réglages de lecture">
       <label className={styles.row} htmlFor="font-size">
         <span className={styles.label}>Taille du texte</span>
         <span className={styles.value}>{settings.fontSize} px</span>

@@ -5,7 +5,6 @@ interface TopBarProps {
   title: string
   /** 0 to 1. */
   progress: number
-  visible: boolean
   hasBookmark: boolean
   onBack: () => void
   onToggleBookmark: () => void
@@ -16,7 +15,6 @@ interface TopBarProps {
 export function TopBar({
   title,
   progress,
-  visible,
   hasBookmark,
   onBack,
   onToggleBookmark,
@@ -26,7 +24,7 @@ export function TopBar({
   const percent = Math.round(progress * 100)
 
   return (
-    <header className={`${styles.bar} ${visible ? '' : styles.hidden}`}>
+    <header className={styles.bar}>
       <div className={styles.inner}>
         <button type="button" className={styles.iconButton} onClick={onBack} aria-label="Retour à la bibliothèque">
           <ArrowLeft size={18} aria-hidden="true" />
@@ -58,6 +56,7 @@ export function TopBar({
           type="button"
           className={styles.iconButton}
           onClick={onToggleSettings}
+          data-settings-toggle=""
           aria-expanded={settingsOpen}
           aria-label="Réglages de lecture"
         >

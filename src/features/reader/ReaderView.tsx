@@ -1,5 +1,5 @@
 import { useAtomValue, useSetAtom } from 'jotai'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { bookmarkAtom, closeDocumentAtom, readerAtom } from '../../atoms/reader'
 import { settingsAtom } from '../../atoms/settings'
 import { updateEntry } from '../../lib/storage/documents'
@@ -10,7 +10,6 @@ import { anchorFromPoint } from '../bookmark/anchor'
 import { DocumentFlow } from './DocumentFlow'
 import { SettingsPanel } from './SettingsPanel'
 import { TopBar } from './TopBar'
-import { useAutoHideTopBar } from './useAutoHideTopBar'
 import { PROBE_OFFSET_PX, useReadingPosition } from './useReadingPosition'
 import styles from './ReaderView.module.css'
 
@@ -27,7 +26,6 @@ export function ReaderView() {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; anchor: Anchor } | null>(
     null,
   )
-  const topBarVisible = useAutoHideTopBar()
 
   const entryId = state?.entry.id ?? ''
   const blocks = state?.document.blocks ?? []
@@ -67,15 +65,6 @@ export function ReaderView() {
     if (anchor) persistBookmark(anchor)
   }, [bookmark, persistBookmark])
 
-  useEffect(() => {
-    if (!settingsOpen) return
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setSettingsOpen(false)
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [settingsOpen])
-
   if (!state) return null
 
   const { document: extracted, entry, extracting, pagesProcessed } = state
@@ -85,7 +74,6 @@ export function ReaderView() {
       <TopBar
         title={entry.title}
         progress={progress}
-        visible={topBarVisible || settingsOpen}
         hasBookmark={bookmark !== null}
         onBack={() => {
           // Save first: the library reads the progress back as soon as it mounts.

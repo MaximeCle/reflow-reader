@@ -4,16 +4,9 @@
   left: 0;
   right: 0;
   z-index: 10;
-  background: var(--color-chrome);
-  backdrop-filter: blur(8px);
+  /* Opaque: the bar stays put, so scrolled text must not ghost through it. */
+  background: var(--color-surface);
   border-bottom: 1px solid var(--color-line);
-  transform: translateY(0);
-  transition: transform var(--transition), opacity var(--transition);
-}
-
-.hidden {
-  transform: translateY(-100%);
-  opacity: 0;
 }
 
 .inner {
