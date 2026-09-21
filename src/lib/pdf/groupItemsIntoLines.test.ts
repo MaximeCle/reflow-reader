@@ -63,4 +63,53 @@ describe('groupItemsIntoLines', () => {
   it('clôt la dernière ligne sans marqueur de fin', () => {
     expect(groupItemsIntoLines([item('Sans EOL final.', 72, 700)], 1)).toHaveLength(1)
   })
+
+  it('supprime un glyphe repeint en place (faux gras)', () => {
+    // Chaque glyphe est dessiné deux fois, décalé de 0,3 pt : « CCrriimmee ».
+    const glyphs = [...'Crime'].flatMap((char, index) => {
+      const x = 72 + index * 5.5
+      return [item(char, x, 700), item(char, x + 0.3, 700)]
+    })
+    glyphs[glyphs.length - 1] = { ...glyphs[glyphs.length - 1]!, hasEOL: true }
+
+    expect(groupItemsIntoLines(glyphs, 1)[0]?.text).toBe('Crime')
+  })
+
+  it('supprime une ligne entière repeinte en place', () => {
+    const items = [
+      item('Crime et châtiment', 72, 700),
+      item('Crime et châtiment', 72.4, 700, { hasEOL: true }),
+    ]
+
+    expect(groupItemsIntoLines(items, 1)[0]?.text).toBe('Crime et châtiment')
+  })
+
+  it('garde une lettre réellement répétée', () => {
+    // Le second « i » de « Hawaii » est une avance complète plus loin.
+    const items = [
+      item('Hawa', 72, 700),
+      item('i', 92, 700),
+      item('i', 94.8, 700, { hasEOL: true }),
+    ]
+
+    expect(groupItemsIntoLines(items, 1)[0]?.text).toBe('Hawaii')
+  })
+
+  it('garde un mot répété ailleurs sur la ligne', () => {
+    const items = [
+      item('tout', 72, 700),
+      item('tout', 140, 700, { hasEOL: true }),
+    ]
+
+    expect(groupItemsIntoLines(items, 1)[0]?.text).toBe('tout tout')
+  })
+
+  it('garde un texte identique sur une autre ligne', () => {
+    const items = [
+      item('Chapitre', 72, 700, { hasEOL: true }),
+      item('Chapitre', 72, 686, { hasEOL: true }),
+    ]
+
+    expect(groupItemsIntoLines(items, 1)).toHaveLength(2)
+  })
 })

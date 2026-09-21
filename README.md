@@ -23,7 +23,8 @@ Le pipeline est découpé en fonctions pures, testables sans PDF réel : seul
 
 | Étape | Fichier | Rôle |
 | --- | --- | --- |
-| Lignes | `groupItemsIntoLines.ts` | Regroupe les fragments de pdf.js en lignes positionnées |
+| Lignes | `groupItemsIntoLines.ts` | Regroupe les fragments de pdf.js en lignes positionnées et ignore les glyphes repeints en place (faux gras) |
+| Surimpression | `undoubleText.ts` | Répare les lignes extraites deux fois : « CCrriimmee » → « Crime » |
 | Nettoyage | `stripRepeatedLines.ts` | Retire en-têtes, pieds de page et numéros répétés |
 | Paragraphes | `reconstructParagraphs.ts` | Recolle les lignes selon les écarts verticaux, les tailles de police et l'indentation |
 | Césure | `dehyphenate.ts` | « inter- / face » → « interface » |
