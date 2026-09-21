@@ -1,21 +1,23 @@
 import { useAtomValue } from 'jotai'
 import { useEffect } from 'react'
 import { readerAtom } from './atoms/reader'
-import { themeAtom } from './atoms/settings'
+import { settingsAtom } from './atoms/settings'
 import { LibraryView } from './features/library/LibraryView'
 import { ReaderView } from './features/reader/ReaderView'
 
 const APP_NAME = 'reflow'
 
 export function App() {
-  const theme = useAtomValue(themeAtom)
+  const { theme, font } = useAtomValue(settingsAtom)
   const reader = useAtomValue(readerAtom)
   const reading = reader !== null
   const title = reader?.entry.title
 
   useEffect(() => {
-    document.documentElement.dataset.theme = theme
-  }, [theme])
+    const root = document.documentElement
+    root.dataset.theme = theme
+    root.dataset.font = font
+  }, [theme, font])
 
   useEffect(() => {
     document.title = title ? `${title} · ${APP_NAME}` : APP_NAME

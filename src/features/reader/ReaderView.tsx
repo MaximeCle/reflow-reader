@@ -93,7 +93,7 @@ export function ReaderView() {
             bookmark={bookmark}
             onPlace={persistBookmark}
             onClear={() => persistBookmark(null)}
-            layoutKey={`${settings.fontSize}:${extracted.blocks.length}`}
+            layoutKey={`${settings.fontSize}:${settings.font}:${extracted.blocks.length}`}
           />
 
           <article

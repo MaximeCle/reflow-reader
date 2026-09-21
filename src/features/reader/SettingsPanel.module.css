@@ -3,7 +3,7 @@
   top: 52px;
   right: 16px;
   z-index: 20;
-  width: min(280px, calc(100vw - 32px));
+  width: min(300px, calc(100vw - 32px));
   padding: 14px 16px 18px;
   border: 1px solid var(--color-line);
   border-radius: var(--radius);
@@ -19,8 +19,36 @@
   margin-top: 14px;
 }
 
+.stackedRow {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+}
+
 .row:first-child {
   margin-top: 0;
+}
+
+.fonts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.fontButton {
+  padding: 8px 4px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  background: transparent;
+  font-size: 13px;
+  color: var(--color-muted);
+  transition: background-color var(--transition), border-color var(--transition), color var(--transition);
+}
+
+.fontButton[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  border-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
+  color: var(--color-text);
 }
 
 .label {

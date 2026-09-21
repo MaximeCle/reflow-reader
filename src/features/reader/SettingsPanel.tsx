@@ -2,7 +2,7 @@ import { useAtom } from 'jotai'
 import { Moon, Sun } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import { settingsAtom } from '../../atoms/settings'
-import { MAX_FONT_SIZE, MIN_FONT_SIZE } from '../../lib/storage/settings'
+import { MAX_FONT_SIZE, MIN_FONT_SIZE, READING_FONTS } from '../../lib/storage/settings'
 import styles from './SettingsPanel.module.css'
 
 interface SettingsPanelProps {
@@ -49,6 +49,25 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         value={settings.fontSize}
         onChange={(event) => update({ fontSize: Number(event.target.value) })}
       />
+
+      <div className={styles.stackedRow}>
+        <span className={styles.label}>Police</span>
+        <div className={styles.fonts} role="group" aria-label="Police de lecture">
+          {READING_FONTS.map((font) => (
+            <button
+              key={font.id}
+              type="button"
+              className={styles.fontButton}
+              // Each option previews itself in the typeface it selects.
+              style={{ fontFamily: font.stack }}
+              aria-pressed={settings.font === font.id}
+              onClick={() => update({ font: font.id })}
+            >
+              {font.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div className={styles.row}>
         <span className={styles.label}>Thème</span>
