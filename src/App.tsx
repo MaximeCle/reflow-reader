@@ -5,7 +5,7 @@ import { settingsAtom } from './atoms/settings'
 import { LibraryView } from './features/library/LibraryView'
 import { ReaderView } from './features/reader/ReaderView'
 
-const APP_NAME = 'reflow'
+const APP_NAME = 'PDF-reflow'
 
 export function App() {
   const { theme, font } = useAtomValue(settingsAtom)

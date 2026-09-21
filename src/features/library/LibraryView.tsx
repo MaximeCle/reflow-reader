@@ -56,8 +56,8 @@ export function LibraryView() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <h1 className={styles.appTitle}>reflow</h1>
-        <p className={styles.tagline}>Vos PDF, remis en page pour être lus.</p>
+        <h1 className={styles.appTitle}>PDF-reflow</h1>
+        <p className={styles.tagline}>Lire un PDF comme un livre.</p>
       </header>
 
       <div
