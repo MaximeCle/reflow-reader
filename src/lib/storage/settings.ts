@@ -16,7 +16,7 @@ function systemTheme(): Theme {
 }
 
 export function defaultSettings(): ReaderSettings {
-  return { fontSize: 19, theme: systemTheme() }
+  return { fontSize: 17, theme: systemTheme() }
 }
 
 /** Read synchronously at startup so the theme never flashes. */

@@ -1,0 +1,30 @@
+.menu {
+  position: fixed;
+  z-index: 30;
+  min-width: 200px;
+  padding: 4px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 18%);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: calc(var(--radius) - 3px);
+  background: transparent;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--color-text);
+  text-align: left;
+}
+
+.item:hover,
+.item:focus-visible {
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+}

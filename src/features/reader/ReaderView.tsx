@@ -4,6 +4,7 @@ import { bookmarkAtom, closeDocumentAtom, readerAtom } from '../../atoms/reader'
 import { settingsAtom } from '../../atoms/settings'
 import { updateEntry } from '../../lib/storage/documents'
 import type { Anchor } from '../../lib/storage/types'
+import { BookmarkContextMenu } from '../bookmark/BookmarkContextMenu'
 import { BookmarkLayer } from '../bookmark/BookmarkLayer'
 import { anchorFromPoint } from '../bookmark/anchor'
 import { DocumentFlow } from './DocumentFlow'
@@ -23,6 +24,9 @@ export function ReaderView() {
   const settings = useAtomValue(settingsAtom)
   const contentRef = useRef<HTMLElement | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; anchor: Anchor } | null>(
+    null,
+  )
   const topBarVisible = useAutoHideTopBar()
 
   const entryId = state?.entry.id ?? ''
@@ -44,6 +48,13 @@ export function ReaderView() {
     },
     [entryId, setBookmark],
   )
+
+  const handleContextMenu = useCallback((event: React.MouseEvent) => {
+    const anchor = anchorFromPoint(event.clientX, event.clientY)
+    if (!anchor) return // No line under the pointer: let the native menu show.
+    event.preventDefault()
+    setContextMenu({ x: event.clientX, y: event.clientY, anchor })
+  }, [])
 
   const toggleBookmarkAtReadingLine = useCallback(() => {
     if (bookmark) {
@@ -97,7 +108,12 @@ export function ReaderView() {
             layoutKey={`${settings.fontSize}:${extracted.blocks.length}`}
           />
 
-          <article ref={contentRef} className={styles.content} lang="fr">
+          <article
+            ref={contentRef}
+            className={styles.content}
+            lang="fr"
+            onContextMenu={handleContextMenu}
+          >
             <DocumentFlow
               blocks={extracted.blocks}
               virtualized={extracted.pageCount > VIRTUALIZE_ABOVE_PAGES}
@@ -111,6 +127,18 @@ export function ReaderView() {
           )}
         </div>
       </main>
+
+      {contextMenu && (
+        <BookmarkContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onConfirm={() => {
+            persistBookmark(contextMenu.anchor)
+            setContextMenu(null)
+          }}
+          onDismiss={() => setContextMenu(null)}
+        />
+      )}
     </div>
   )
 }
