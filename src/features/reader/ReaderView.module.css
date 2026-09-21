@@ -1,0 +1,47 @@
+.reader {
+  min-height: 100%;
+  background: var(--color-surface);
+}
+
+.column {
+  padding: 96px 0 40vh;
+}
+
+/*
+ * The gutters are part of the column box, so the bookmark margin is a real
+ * strip next to the text rather than an area off the side of the page.
+ */
+.columnInner {
+  position: relative;
+  max-width: calc(var(--reading-width) + 2 * var(--margin-gutter));
+  margin: 0 auto;
+  padding: 0 var(--margin-gutter);
+}
+
+.content {
+  display: block;
+  margin: 0;
+  font-family: var(--font-reading);
+  font-size: var(--reading-font-size);
+  line-height: var(--reading-line-height);
+  font-variant-numeric: oldstyle-nums;
+}
+
+.extracting {
+  margin: 24px 0 0;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+@media (width <= 720px) {
+  .columnInner {
+    --margin-gutter: 20px;
+
+    max-width: none;
+  }
+
+  .column {
+    padding-top: 80px;
+  }
+}

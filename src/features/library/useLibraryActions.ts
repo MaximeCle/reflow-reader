@@ -1,0 +1,135 @@
+import { useSetAtom } from 'jotai'
+import { useCallback, useState } from 'react'
+import { refreshLibraryAtom } from '../../atoms/library'
+import { readerAtom } from '../../atoms/reader'
+import { hashBuffer } from '../../lib/hash'
+import {
+  getContent,
+  getEntry,
+  putContent,
+  putEntry,
+  removeDocument,
+  updateEntry,
+} from '../../lib/storage/documents'
+import type { LibraryEntry } from '../../lib/storage/types'
+
+function isPdf(file: File): boolean {
+  return file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+}
+
+function newEntry(id: string, title: string): LibraryEntry {
+  const now = Date.now()
+  return {
+    id,
+    title,
+    pageCount: 0,
+    addedAt: now,
+    lastReadAt: now,
+    progress: 0,
+    bookmark: null,
+    readingPosition: null,
+  }
+}
+
+export function useLibraryActions() {
+  const setReader = useSetAtom(readerAtom)
+  const refreshLibrary = useSetAtom(refreshLibraryAtom)
+  const [importing, setImporting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const openEntry = useCallback(
+    async (entry: LibraryEntry) => {
+      const content = await getContent(entry.id)
+      if (!content) {
+        setError('Le texte de ce document est introuvable. Importez à nouveau le PDF.')
+        return
+      }
+      const updated = (await updateEntry(entry.id, { lastReadAt: Date.now() })) ?? entry
+      setReader({
+        entry: updated,
+        document: content,
+        pagesProcessed: content.pageCount,
+        extracting: false,
+      })
+    },
+    [setReader],
+  )
+
+  const importFile = useCallback(
+    async (file: File) => {
+      if (!isPdf(file)) {
+        setError('Ce fichier n’est pas un PDF.')
+        return
+      }
+
+      setError(null)
+      setImporting(true)
+      try {
+        const buffer = await file.arrayBuffer()
+        const id = await hashBuffer(buffer)
+
+        // Already read once: reopen from storage instead of extracting again.
+        const existing = await getEntry(id)
+        if (existing) {
+          const content = await getContent(id)
+          if (content) {
+            await openEntry(existing)
+            return
+          }
+        }
+
+        const fallbackTitle = file.name.replace(/\.pdf$/iu, '')
+        const entry = existing ?? newEntry(id, fallbackTitle)
+
+        // pdf.js and its worker are heavy: load them only on a real import.
+        const { extractPdf } = await import('../../lib/pdf/extractPdf')
+
+        // Show the opening pages while the rest is still being read.
+        const extraction = extractPdf(buffer, fallbackTitle)
+        let step = await extraction.next()
+        while (!step.done) {
+          const { document, pagesProcessed, totalPages } = step.value
+          setReader({
+            entry: { ...entry, pageCount: totalPages },
+            document,
+            pagesProcessed,
+            extracting: true,
+          })
+          step = await extraction.next()
+        }
+
+        const { document, title } = step.value
+        const finished: LibraryEntry = {
+          ...entry,
+          title: existing?.title ?? title,
+          pageCount: document.pageCount,
+          lastReadAt: Date.now(),
+        }
+        await Promise.all([putContent(id, document), putEntry(finished)])
+        setReader({
+          entry: finished,
+          document,
+          pagesProcessed: document.pageCount,
+          extracting: false,
+        })
+        await refreshLibrary()
+      } catch {
+        setError('Impossible de lire ce PDF.')
+        setReader(null)
+      } finally {
+        setImporting(false)
+      }
+    },
+    [openEntry, refreshLibrary, setReader],
+  )
+
+  const deleteEntry = useCallback(
+    async (id: string) => {
+      await removeDocument(id)
+      await refreshLibrary()
+    },
+    [refreshLibrary],
+  )
+
+  return { importFile, openEntry, deleteEntry, importing, error }
+}
