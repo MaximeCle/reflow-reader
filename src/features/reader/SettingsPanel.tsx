@@ -2,7 +2,13 @@ import { useAtom } from 'jotai'
 import { Moon, Sun } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import { settingsAtom } from '../../atoms/settings'
-import { MAX_FONT_SIZE, MIN_FONT_SIZE, READING_FONTS } from '../../lib/storage/settings'
+import {
+  MAX_FONT_SIZE,
+  MAX_LINE_HEIGHT,
+  MIN_FONT_SIZE,
+  MIN_LINE_HEIGHT,
+  READING_FONTS,
+} from '../../lib/storage/settings'
 import styles from './SettingsPanel.module.css'
 
 interface SettingsPanelProps {
@@ -48,6 +54,21 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         step={1}
         value={settings.fontSize}
         onChange={(event) => update({ fontSize: Number(event.target.value) })}
+      />
+
+      <label className={styles.row} htmlFor="line-height">
+        <span className={styles.label}>Interligne</span>
+        <span className={styles.value}>{settings.lineHeight.toFixed(1).replace('.', ',')}</span>
+      </label>
+      <input
+        id="line-height"
+        className={styles.slider}
+        type="range"
+        min={MIN_LINE_HEIGHT}
+        max={MAX_LINE_HEIGHT}
+        step={0.1}
+        value={settings.lineHeight}
+        onChange={(event) => update({ lineHeight: Number(event.target.value) })}
       />
 
       <div className={styles.stackedRow}>

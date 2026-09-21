@@ -21,9 +21,11 @@ export interface PositionedLine {
   x: number
   y: number
   fontSize: number
+  /** Set by `detectFootnotes` for the note block closing a page. */
+  footnote?: boolean
 }
 
-export type BlockKind = 'paragraph' | 'heading-2' | 'heading-3'
+export type BlockKind = 'paragraph' | 'heading-2' | 'heading-3' | 'footnote'
 
 export interface Block {
   /** Stable across re-extraction of the same document. */

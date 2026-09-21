@@ -11,6 +11,8 @@ export const READING_FONTS: ReadonlyArray<{ id: ReadingFont; label: string; stac
 export interface ReaderSettings {
   /** 16 to 24 px. */
   fontSize: number
+  /** 1.3 to 2, unitless. */
+  lineHeight: number
   theme: Theme
   font: ReadingFont
 }
@@ -19,6 +21,12 @@ const KEY = 'reflow-reader:settings'
 
 export const MIN_FONT_SIZE = 16
 export const MAX_FONT_SIZE = 24
+export const MIN_LINE_HEIGHT = 1.3
+export const MAX_LINE_HEIGHT = 2
+
+export function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value))
+}
 
 function systemTheme(): Theme {
   return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
@@ -29,7 +37,7 @@ function isReadingFont(value: unknown): value is ReadingFont {
 }
 
 export function defaultSettings(): ReaderSettings {
-  return { fontSize: 17, theme: systemTheme(), font: 'literata' }
+  return { fontSize: 17, lineHeight: 1.6, theme: systemTheme(), font: 'literata' }
 }
 
 /** Read synchronously at startup so the theme never flashes. */
@@ -42,8 +50,12 @@ export function loadSettings(): ReaderSettings {
     return {
       fontSize:
         typeof parsed.fontSize === 'number'
-          ? Math.min(MAX_FONT_SIZE, Math.max(MIN_FONT_SIZE, parsed.fontSize))
+          ? clamp(parsed.fontSize, MIN_FONT_SIZE, MAX_FONT_SIZE)
           : fallback.fontSize,
+      lineHeight:
+        typeof parsed.lineHeight === 'number'
+          ? clamp(parsed.lineHeight, MIN_LINE_HEIGHT, MAX_LINE_HEIGHT)
+          : fallback.lineHeight,
       theme: parsed.theme === 'dark' || parsed.theme === 'light' ? parsed.theme : fallback.theme,
       font: isReadingFont(parsed.font) ? parsed.font : fallback.font,
     }

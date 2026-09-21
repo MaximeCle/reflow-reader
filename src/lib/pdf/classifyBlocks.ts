@@ -1,3 +1,4 @@
+import { bodyFontSize } from './bodyFontSize'
 import type { RawParagraph } from './reconstructParagraphs'
 import type { BlockKind } from './types'
 
@@ -5,7 +6,7 @@ export interface ClassifiedParagraph extends RawParagraph {
   kind: BlockKind
 }
 
-export interface DetectHeadingsOptions {
+export interface ClassifyOptions {
   /** Font size ratio above body text for an h2. */
   headingRatio?: number
   /** Font size ratio above body text for an h3. */
@@ -14,40 +15,23 @@ export interface DetectHeadingsOptions {
   maxHeadingLength?: number
 }
 
-/** Body font size: the size most of the document's text is set in. */
-function dominantFontSize(paragraphs: RawParagraph[]): number {
-  const weights = new Map<number, number>()
-  let best = 0
-  let bestWeight = 0
-
-  for (const paragraph of paragraphs) {
-    const size = Math.round(paragraph.fontSize * 2) / 2
-    const weight = (weights.get(size) ?? 0) + paragraph.text.length
-    weights.set(size, weight)
-    if (weight > bestWeight) {
-      bestWeight = weight
-      best = size
-    }
-  }
-
-  return best
-}
-
-export function detectHeadings(
+/** Gives every block its kind: note, heading, subheading, or plain paragraph. */
+export function classifyBlocks(
   paragraphs: RawParagraph[],
-  options: DetectHeadingsOptions = {},
+  options: ClassifyOptions = {},
 ): ClassifiedParagraph[] {
   const headingRatio = options.headingRatio ?? 1.45
   const subheadingRatio = options.subheadingRatio ?? 1.15
   const maxHeadingLength = options.maxHeadingLength ?? 200
 
-  const bodyFontSize = dominantFontSize(paragraphs)
-  if (bodyFontSize === 0) {
-    return paragraphs.map((paragraph) => ({ ...paragraph, kind: 'paragraph' }))
-  }
+  // Notes are set small by definition: they must not skew the body size.
+  const body = bodyFontSize(paragraphs.filter((paragraph) => !paragraph.footnote))
 
   return paragraphs.map((paragraph) => {
-    const ratio = paragraph.fontSize / bodyFontSize
+    if (paragraph.footnote) return { ...paragraph, kind: 'footnote' }
+    if (body === 0) return { ...paragraph, kind: 'paragraph' }
+
+    const ratio = paragraph.fontSize / body
     const short = paragraph.text.length <= maxHeadingLength
 
     let kind: BlockKind = 'paragraph'

@@ -70,7 +70,12 @@ export function ReaderView() {
   const { document: extracted, entry, extracting, pagesProcessed } = state
 
   return (
-    <div className={styles.reader} style={{ '--reading-font-size': `${settings.fontSize}px` } as React.CSSProperties}>
+    <div className={styles.reader} style={
+        {
+          '--reading-font-size': `${settings.fontSize}px`,
+          '--reading-line-height': String(settings.lineHeight),
+        } as React.CSSProperties
+      }>
       <TopBar
         title={entry.title}
         progress={progress}
@@ -93,7 +98,7 @@ export function ReaderView() {
             bookmark={bookmark}
             onPlace={persistBookmark}
             onClear={() => persistBookmark(null)}
-            layoutKey={`${settings.fontSize}:${settings.font}:${extracted.blocks.length}`}
+            layoutKey={`${settings.fontSize}:${settings.lineHeight}:${settings.font}:${extracted.blocks.length}`}
           />
 
           <article

@@ -28,7 +28,8 @@ Le pipeline est découpé en fonctions pures, testables sans PDF réel : seul
 | Nettoyage | `stripRepeatedLines.ts` | Retire en-têtes, pieds de page et numéros répétés |
 | Paragraphes | `reconstructParagraphs.ts` | Recolle les lignes selon les écarts verticaux, les tailles de police et l'indentation |
 | Césure | `dehyphenate.ts` | « inter- / face » → « interface » |
-| Titres | `detectHeadings.ts` | Classe les blocs en `h2` / `h3` selon la taille de police |
+| Notes | `detectFootnotes.ts` | Repère le bloc de notes qui ferme une page, sous le corps du texte |
+| Classement | `classifyBlocks.ts` | Donne son type à chaque bloc : note, `h2`, `h3` ou paragraphe |
 | Assemblage | `buildDocument.ts` | Enchaîne le tout et attribue un `data-block-id` stable |
 
 `extractPdf` est un générateur asynchrone : il rend le document reconstruit au

@@ -1,4 +1,5 @@
 import { joinTextSegments } from './dehyphenate'
+import { startsFootnote } from './detectFootnotes'
 import type { PositionedLine } from './types'
 
 export interface RawParagraph {
@@ -7,6 +8,7 @@ export interface RawParagraph {
   page: number
   fontSize: number
   lineCount: number
+  footnote: boolean
 }
 
 export interface ReconstructOptions {
@@ -67,12 +69,13 @@ export function reconstructParagraphs(
   let fontSize = 0
   let maxFontSize = 0
   let lineCount = 0
+  let footnote = false
   let previous: PositionedLine | null = null
 
   const flush = (): void => {
     const trimmed = text.trim()
     if (trimmed.length > 0) {
-      paragraphs.push({ text: trimmed, page, fontSize: maxFontSize, lineCount })
+      paragraphs.push({ text: trimmed, page, fontSize: maxFontSize, lineCount, footnote })
     }
     text = ''
     lineCount = 0
@@ -84,6 +87,7 @@ export function reconstructParagraphs(
     fontSize = line.fontSize
     maxFontSize = line.fontSize
     lineCount = 1
+    footnote = line.footnote === true
   }
 
   for (const line of lines) {
@@ -95,15 +99,28 @@ export function reconstructParagraphs(
 
     const sameFontSize =
       fontSize > 0 && Math.abs(line.fontSize - fontSize) / fontSize <= fontSizeTolerance
+    // Body text and a note never share a block, even at close font sizes.
+    const sameKind = (line.footnote === true) === footnote
+    // Notes are numbered: a marker opens the next one rather than continuing this one.
+    const opensAnotherNote = footnote && startsFootnote(line.text)
 
     let breaksParagraph: boolean
     if (line.page === previous.page) {
       const gap = previous.y - line.y
       const isIndented = line.x - bodyLeft > line.fontSize * indentFactor
-      breaksParagraph = gap > typicalGap * gapFactor || !sameFontSize || isIndented
+      breaksParagraph =
+        gap > typicalGap * gapFactor ||
+        !sameFontSize ||
+        !sameKind ||
+        isIndented ||
+        opensAnotherNote
     } else {
       const continuesFlow =
-        sameFontSize && !endsSentence(text) && /^\p{Ll}/u.test(line.text.trimStart())
+        sameFontSize &&
+        sameKind &&
+        !opensAnotherNote &&
+        !endsSentence(text) &&
+        /^\p{Ll}/u.test(line.text.trimStart())
       breaksParagraph = !continuesFlow
     }
 

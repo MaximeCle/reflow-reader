@@ -1,4 +1,5 @@
-import { detectHeadings } from './detectHeadings'
+import { classifyBlocks } from './classifyBlocks'
+import { detectFootnotes } from './detectFootnotes'
 import { reconstructParagraphs } from './reconstructParagraphs'
 import { stripRepeatedLines } from './stripRepeatedLines'
 import { undoubleText } from './undoubleText'
@@ -14,8 +15,10 @@ import type { Block, ExtractedDocument, PositionedLine } from './types'
  */
 export function buildDocument(lines: PositionedLine[], pageCount: number): ExtractedDocument {
   const repaired = lines.map((line) => ({ ...line, text: undoubleText(line.text) }))
-  const cleaned = stripRepeatedLines(repaired)
-  const classified = detectHeadings(reconstructParagraphs(cleaned))
+  // Footnotes are found after headers and page numbers are gone: they too sit
+  // at the bottom of the page and would otherwise be taken for notes.
+  const cleaned = detectFootnotes(stripRepeatedLines(repaired))
+  const classified = classifyBlocks(reconstructParagraphs(cleaned))
 
   const blocks: Block[] = classified.map((paragraph, index) => ({
     id: `b${index}p${paragraph.page}`,

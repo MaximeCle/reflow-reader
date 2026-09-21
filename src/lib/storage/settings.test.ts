@@ -9,9 +9,9 @@ describe('réglages de lecture', () => {
   })
 
   it('relit ce qui a été enregistré', () => {
-    saveSettings({ fontSize: 22, theme: 'dark', font: 'source-serif' })
+    saveSettings({ fontSize: 22, lineHeight: 1.8, theme: 'dark', font: 'source-serif' })
 
-    expect(loadSettings()).toEqual({ fontSize: 22, theme: 'dark', font: 'source-serif' })
+    expect(loadSettings()).toEqual({ fontSize: 22, lineHeight: 1.8, theme: 'dark', font: 'source-serif' })
   })
 
   it('utilise Literata par défaut', () => {
@@ -32,6 +32,14 @@ describe('réglages de lecture', () => {
 
     window.localStorage.setItem(KEY, JSON.stringify({ fontSize: 2 }))
     expect(loadSettings().fontSize).toBe(16)
+  })
+
+  it('borne un interligne hors limites', () => {
+    window.localStorage.setItem(KEY, JSON.stringify({ lineHeight: 12 }))
+    expect(loadSettings().lineHeight).toBe(2)
+
+    window.localStorage.setItem(KEY, JSON.stringify({ lineHeight: 0.2 }))
+    expect(loadSettings().lineHeight).toBe(1.3)
   })
 
   it('survit à un contenu illisible', () => {

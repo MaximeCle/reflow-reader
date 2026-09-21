@@ -91,6 +91,35 @@ describe('buildDocument', () => {
     )
   })
 
+  it('isole les notes de bas de page sans les mêler au corps', () => {
+    const withNotes = [
+      ...page(1, [
+        'Le vieux marin regardait la mer immobile, comme si le temps avait',
+        'cessé de couler sur le pont du navire.',
+        ['1. Voir à ce sujet lédition de 1866.', 8.5],
+        ['2. Lauteur y revient au chapitre suivant.', 8.5],
+      ]),
+      ...page(2, ['Une deuxième page de corps, dans la taille dominante du document.']),
+      ...page(3, ['Une troisième page de corps, toujours dans la même taille.']),
+    ]
+
+    const blocks = buildDocument(withNotes, 3).blocks
+
+    expect(blocks.map(({ kind, text }) => ({ kind, text }))).toEqual([
+      {
+        kind: 'paragraph',
+        text: 'Le vieux marin regardait la mer immobile, comme si le temps avait cessé de couler sur le pont du navire.',
+      },
+      { kind: 'footnote', text: '1. Voir à ce sujet lédition de 1866.' },
+      { kind: 'footnote', text: '2. Lauteur y revient au chapitre suivant.' },
+      {
+        kind: 'paragraph',
+        text: 'Une deuxième page de corps, dans la taille dominante du document.',
+      },
+      { kind: 'paragraph', text: 'Une troisième page de corps, toujours dans la même taille.' },
+    ])
+  })
+
   it('gère un document vide', () => {
     expect(buildDocument([], 0)).toEqual({ blocks: [], pageCount: 0 })
   })

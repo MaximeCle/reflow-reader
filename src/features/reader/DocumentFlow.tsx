@@ -8,6 +8,8 @@ interface BlockViewProps {
   pageMarker: number | null
   /** Skips layout of off-screen blocks on long documents. */
   virtualized: boolean
+  /** First note of a run: it carries the separator rule above it. */
+  opensNotes: boolean
 }
 
 /**
@@ -15,7 +17,12 @@ interface BlockViewProps {
  * the DOM text keeps `data-block-id` character offsets — and so bookmarks —
  * aligned with the extracted text.
  */
-const BlockView = memo(function BlockView({ block, pageMarker, virtualized }: BlockViewProps) {
+const BlockView = memo(function BlockView({
+  block,
+  pageMarker,
+  virtualized,
+  opensNotes,
+}: BlockViewProps) {
   const attributes = {
     'data-block-id': block.id,
     'data-page-marker': pageMarker ?? undefined,
@@ -25,7 +32,9 @@ const BlockView = memo(function BlockView({ block, pageMarker, virtualized }: Bl
       ? styles.heading2
       : block.kind === 'heading-3'
         ? styles.heading3
-        : styles.paragraph
+        : block.kind === 'footnote'
+          ? `${styles.footnote}${opensNotes ? ` ${styles.footnoteFirst}` : ''}`
+          : styles.paragraph
   const className = virtualized ? `${kindClass} ${styles.virtualized}` : kindClass
 
   if (block.kind === 'heading-2') {
@@ -66,6 +75,7 @@ export function DocumentFlow({ blocks, virtualized = false }: DocumentFlowProps)
           // Blocks run in page order, so a page starts where its number rises.
           pageMarker={block.page > (blocks[index - 1]?.page ?? 0) ? block.page : null}
           virtualized={virtualized}
+          opensNotes={block.kind === 'footnote' && blocks[index - 1]?.kind !== 'footnote'}
         />
       ))}
     </>
