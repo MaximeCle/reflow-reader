@@ -141,6 +141,19 @@ export async function pullEntries(): Promise<LibraryEntry[]> {
   return (data as LibraryEntryRow[]).map(fromLibraryEntryRow)
 }
 
+/**
+ * Ids the group already holds the text for. Cheap (ids only) next to the
+ * documents themselves, so it can gate re-uploading them.
+ */
+export async function listSyncedContentIds(): Promise<Set<string>> {
+  const ids = await withSync(async (supabase, code) => {
+    const { data, error } = await supabase.from('document_content').select('id').eq('code', code)
+    if (error) throw error
+    return new Set((data as { id: string }[]).map((row) => row.id))
+  })
+  return ids ?? new Set()
+}
+
 export async function pullContent(id: string): Promise<ExtractedDocument | undefined> {
   const supabase = getClient()
   const code = getSyncCode()

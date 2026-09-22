@@ -2,7 +2,15 @@ import type { ExtractedDocument } from '../pdf/types'
 import { getContent, putContent, putEntry, removeDocument, updateEntry } from '../storage/documents'
 import type { LibraryEntry } from '../storage/types'
 import { mergeLibraryEntry } from './mergeLibraryEntry'
-import { isSyncEnabled, pullContent, pullEntries, pushContent, pushDelete, pushEntry } from './syncClient'
+import {
+  isSyncEnabled,
+  listSyncedContentIds,
+  pullContent,
+  pullEntries,
+  pushContent,
+  pushDelete,
+  pushEntry,
+} from './syncClient'
 
 /**
  * Thin wrappers around `lib/storage/documents` that also push to sync when
@@ -67,7 +75,25 @@ export async function reconcileLibraryWithSync(local: LibraryEntry[]): Promise<L
     void pushEntry(localOnly)
   }
 
+  void backfillMissingContent(merged)
+
   return merged
+}
+
+/**
+ * Uploads the text of any book this device holds and the group does not.
+ * Entries and content travel separately, and content is only pushed when a
+ * PDF is imported — so books imported before sync was set up would sync
+ * their covers and progress while staying impossible to open elsewhere.
+ */
+async function backfillMissingContent(entries: LibraryEntry[]): Promise<void> {
+  const alreadySynced = await listSyncedContentIds()
+
+  for (const entry of entries) {
+    if (alreadySynced.has(entry.id)) continue
+    const content = await getContent(entry.id)
+    if (content) await pushContent(entry.id, content)
+  }
 }
 
 /**
