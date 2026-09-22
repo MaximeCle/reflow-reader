@@ -1,8 +1,11 @@
 import { useAtomValue, useSetAtom } from 'jotai'
 import { BookOpen, Check, FilePlus2, Pencil, Trash2, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { libraryAtom, refreshLibraryAtom } from '../../atoms/library'
+import { applyRemoteEntryAtom, libraryAtom, refreshLibraryAtom } from '../../atoms/library'
+import { syncStateAtom } from '../../atoms/sync'
+import { subscribeToLibraryChanges } from '../../lib/sync/syncClient'
 import type { LibraryEntry } from '../../lib/storage/types'
+import { SyncPanel } from './SyncPanel'
 import { useLibraryActions } from './useLibraryActions'
 import styles from './LibraryView.module.css'
 
@@ -106,6 +109,8 @@ function LibraryRow({
 export function LibraryView() {
   const entries = useAtomValue(libraryAtom)
   const refreshLibrary = useSetAtom(refreshLibraryAtom)
+  const applyRemoteEntry = useSetAtom(applyRemoteEntryAtom)
+  const syncState = useAtomValue(syncStateAtom)
   const { importFile, openEntry, deleteEntry, renameEntry, importing, error } = useLibraryActions()
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
@@ -114,11 +119,17 @@ export function LibraryView() {
     void refreshLibrary()
   }, [refreshLibrary])
 
+  // Live updates from other devices while this one stays on the library page.
+  useEffect(() => {
+    return subscribeToLibraryChanges((entry) => void applyRemoteEntry(entry))
+  }, [applyRemoteEntry, syncState.code])
+
   return (
     <div className={styles.page}>
       <header className={styles.header}>
         <h1 className={styles.appTitle}>PDF-reflow</h1>
         <p className={styles.tagline}>Lire un PDF comme un livre.</p>
+        <SyncPanel onJoined={() => void refreshLibrary()} />
       </header>
 
       <div

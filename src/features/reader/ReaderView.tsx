@@ -2,8 +2,8 @@ import { useAtomValue, useSetAtom } from 'jotai'
 import { useCallback, useRef, useState } from 'react'
 import { bookmarkAtom, closeDocumentAtom, readerAtom } from '../../atoms/reader'
 import { settingsAtom } from '../../atoms/settings'
-import { updateEntry } from '../../lib/storage/documents'
 import type { Anchor } from '../../lib/storage/types'
+import { saveEntryUpdate } from '../../lib/sync/syncedStorage'
 import { BookmarkContextMenu } from '../bookmark/BookmarkContextMenu'
 import { BookmarkLayer } from '../bookmark/BookmarkLayer'
 import { anchorFromPoint } from '../bookmark/anchor'
@@ -42,7 +42,7 @@ export function ReaderView() {
   const persistBookmark = useCallback(
     (anchor: Anchor | null) => {
       setBookmark(anchor)
-      if (entryId) void updateEntry(entryId, { bookmark: anchor })
+      if (entryId) void saveEntryUpdate(entryId, { bookmark: anchor, lastReadAt: Date.now() })
     },
     [entryId, setBookmark],
   )

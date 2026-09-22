@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { findBlockElement, anchorFromPoint, rectAt } from '../bookmark/anchor'
 import type { Block } from '../../lib/pdf/types'
-import { updateEntry } from '../../lib/storage/documents'
 import type { Anchor } from '../../lib/storage/types'
+import { saveEntryUpdate } from '../../lib/sync/syncedStorage'
 
 /** Where the "current line" is read from, below the top bar. */
 export const PROBE_OFFSET_PX = 96
@@ -50,7 +50,7 @@ export function useReadingPosition({
     const pending = pendingRef.current
     if (!pending) return
     pendingRef.current = null
-    await updateEntry(entryId, {
+    await saveEntryUpdate(entryId, {
       readingPosition: pending.anchor,
       progress: pending.progress,
       lastReadAt: Date.now(),

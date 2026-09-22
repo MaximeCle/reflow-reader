@@ -1,0 +1,136 @@
+.wrapper {
+  margin-top: 14px;
+}
+
+.toggle {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 12px;
+  color: var(--color-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.toggle:hover {
+  color: var(--color-text);
+}
+
+.panel {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+}
+
+.hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.codeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.code {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--color-accent) 6%, transparent);
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  user-select: all;
+}
+
+.iconButton {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--color-muted);
+  transition: color var(--transition);
+}
+
+.iconButton:hover {
+  color: var(--color-text);
+}
+
+.primaryButton,
+.stopButton,
+.joinButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  justify-self: start;
+  padding: 8px 14px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  background: transparent;
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.primaryButton {
+  border-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
+  color: var(--color-accent);
+}
+
+.primaryButton:disabled,
+.joinButton:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+.stopButton {
+  color: var(--color-muted);
+}
+
+.joinForm {
+  display: flex;
+  gap: 8px;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 13px;
+}
+
+.error {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-accent);
+}
+
+.spinner {
+  animation: sync-spin 900ms linear infinite;
+}
+
+@keyframes sync-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}

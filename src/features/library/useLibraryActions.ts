@@ -3,15 +3,9 @@ import { useCallback, useState } from 'react'
 import { refreshLibraryAtom } from '../../atoms/library'
 import { readerAtom } from '../../atoms/reader'
 import { hashBuffer } from '../../lib/hash'
-import {
-  getContent,
-  getEntry,
-  putContent,
-  putEntry,
-  removeDocument,
-  updateEntry,
-} from '../../lib/storage/documents'
+import { getEntry } from '../../lib/storage/documents'
 import type { LibraryEntry } from '../../lib/storage/types'
+import { deleteSyncedDocument, ensureContentAvailable, saveContent, saveEntry, saveEntryUpdate } from '../../lib/sync/syncedStorage'
 
 function isPdf(file: File): boolean {
   return file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
@@ -39,12 +33,13 @@ export function useLibraryActions() {
 
   const openEntry = useCallback(
     async (entry: LibraryEntry) => {
-      const content = await getContent(entry.id)
+      // Metadata may already be here from sync while the text itself is not yet.
+      const content = await ensureContentAvailable(entry.id)
       if (!content) {
         setError('Le texte de ce document est introuvable. Importez à nouveau le PDF.')
         return
       }
-      const updated = (await updateEntry(entry.id, { lastReadAt: Date.now() })) ?? entry
+      const updated = (await saveEntryUpdate(entry.id, { lastReadAt: Date.now() })) ?? entry
       setReader({
         entry: updated,
         document: content,
@@ -71,7 +66,7 @@ export function useLibraryActions() {
         // Already read once: reopen from storage instead of extracting again.
         const existing = await getEntry(id)
         if (existing) {
-          const content = await getContent(id)
+          const content = await ensureContentAvailable(id)
           if (content) {
             await openEntry(existing)
             return
@@ -105,7 +100,7 @@ export function useLibraryActions() {
           pageCount: document.pageCount,
           lastReadAt: Date.now(),
         }
-        await Promise.all([putContent(id, document), putEntry(finished)])
+        await Promise.all([saveContent(id, document), saveEntry(finished)])
         setReader({
           entry: finished,
           document,
@@ -125,7 +120,7 @@ export function useLibraryActions() {
 
   const deleteEntry = useCallback(
     async (id: string) => {
-      await removeDocument(id)
+      await deleteSyncedDocument(id)
       await refreshLibrary()
     },
     [refreshLibrary],
@@ -135,7 +130,7 @@ export function useLibraryActions() {
     async (id: string, title: string) => {
       const trimmed = title.trim()
       if (trimmed.length === 0) return
-      await updateEntry(id, { title: trimmed })
+      await saveEntryUpdate(id, { title: trimmed, lastReadAt: Date.now() })
       await refreshLibrary()
     },
     [refreshLibrary],

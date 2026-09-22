@@ -12,6 +12,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.116.0",
     "idb-keyval": "^6.3.0",
     "jotai": "^3.0.0",
     "lucide-react": "^1.47.0",
