@@ -11,17 +11,17 @@ import { saveEntryUpdate } from '../../lib/sync/syncedStorage'
 export const PROBE_OFFSET_PX = 68
 const SAVE_DEBOUNCE_MS = 800
 /**
- * How long to keep holding a restored line in place. The reading webfont is
- * fetched with `display: swap`, so the whole column reflows well after the
- * first paint — a single scroll on mount lands far off on a long document.
+ * How long to keep holding a restored line in place — and so how long the
+ * text may stay hidden. The reading webfont is fetched with `display: swap`,
+ * so the whole column reflows well after the first paint; on a slow
+ * connection that lands past a second. Waiting it out beats revealing the
+ * text and then moving it under the reader's eyes.
  */
 const SETTLE_MS = 3000
 /** Closer than this and the line is in place; chasing it would only jitter. */
 const TOLERANCE_PX = 1
 /** Frames the line must hold still before the text is worth showing. */
 const STABLE_FRAMES = 4
-/** Upper bound on hiding the text: a blank reader is worse than a nudge. */
-const REVEAL_TIMEOUT_MS = 700
 
 /** How far the anchored line sits from where it belongs, null if not in the DOM. */
 function anchorOffset(content: HTMLElement, anchor: Anchor): number | null {
@@ -165,18 +165,16 @@ export function useReadingPosition({
       fontsReady = true
     })
 
-    const reveal = () => {
-      window.clearTimeout(revealTimer)
-      setRestoring(false)
-    }
-    // Never hold the text back for long, however unsettled it still looks.
-    const revealTimer = window.setTimeout(reveal, REVEAL_TIMEOUT_MS)
-
+    /*
+     * Showing and freezing are the same moment: the text appears only once it
+     * has stopped moving, and is never nudged afterwards. Better a slightly
+     * longer wait than watching the page settle into place.
+     */
     const settle = () => {
       if (frame !== 0) window.cancelAnimationFrame(frame)
       frame = 0
       controller.abort()
-      reveal()
+      setRestoring(false)
       settledRef.current = true
       // Found or not, restoring is over: a later jump would yank the page
       // out from under someone who has started reading.
@@ -199,7 +197,10 @@ export function useReadingPosition({
         }
         // Held still across several frames with the real font in place: what
         // the reader is about to see is what they will keep seeing.
-        if (fontsReady && stableFrames >= STABLE_FRAMES) reveal()
+        if (fontsReady && stableFrames >= STABLE_FRAMES) {
+          settle()
+          return
+        }
       }
       frame = window.requestAnimationFrame(tick)
     }
@@ -213,7 +214,6 @@ export function useReadingPosition({
 
     return () => {
       if (frame !== 0) window.cancelAnimationFrame(frame)
-      window.clearTimeout(revealTimer)
       controller.abort()
     }
   }, [blocks.length, contentRef])
