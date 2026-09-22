@@ -1,14 +1,11 @@
-import { ArrowLeft, Bookmark, BookmarkCheck, Settings2 } from 'lucide-react'
+import { ArrowLeft, Settings2 } from 'lucide-react'
 import styles from './TopBar.module.css'
 
 interface TopBarProps {
   title: string
   /** 0 to 1. */
   progress: number
-  hasBookmark: boolean
   onBack: () => void
-  /** Puts the bookmark on the line being read, or moves it there. */
-  onBookmarkAction: () => void
   onToggleSettings: () => void
   settingsOpen: boolean
 }
@@ -16,9 +13,7 @@ interface TopBarProps {
 export function TopBar({
   title,
   progress,
-  hasBookmark,
   onBack,
-  onBookmarkAction,
   onToggleSettings,
   settingsOpen,
 }: TopBarProps) {
@@ -38,24 +33,6 @@ export function TopBar({
         <span className={styles.progress} aria-label={`Progression : ${percent} %`}>
           {percent} %
         </span>
-
-        <button
-          type="button"
-          className={styles.iconButton}
-          onClick={onBookmarkAction}
-          title={
-            hasBookmark ? 'Déplacer le marque-page sur cette ligne' : 'Marquer cette ligne'
-          }
-          aria-label={
-            hasBookmark ? 'Déplacer le marque-page sur cette ligne' : 'Marquer cette ligne'
-          }
-        >
-          {hasBookmark ? (
-            <BookmarkCheck size={18} aria-hidden="true" />
-          ) : (
-            <Bookmark size={18} aria-hidden="true" />
-          )}
-        </button>
 
         <button
           type="button"

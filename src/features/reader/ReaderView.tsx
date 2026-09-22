@@ -1,5 +1,6 @@
 import { useAtomValue, useSetAtom } from 'jotai'
-import { useCallback, useRef, useState } from 'react'
+import { Loader2 } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { bookmarkAtom, closeDocumentAtom, readerAtom } from '../../atoms/reader'
 import { settingsAtom } from '../../atoms/settings'
 import type { Anchor } from '../../lib/storage/types'
@@ -11,11 +12,13 @@ import { BookmarkReturn } from './BookmarkReturn'
 import { DocumentFlow } from './DocumentFlow'
 import { SettingsPanel } from './SettingsPanel'
 import { TopBar } from './TopBar'
-import { PROBE_OFFSET_PX, scrollToAnchor, useReadingPosition } from './useReadingPosition'
+import { scrollToAnchor, useReadingPosition } from './useReadingPosition'
 import styles from './ReaderView.module.css'
 
 /** Above this, off-screen blocks are skipped by the browser. */
 const VIRTUALIZE_ABOVE_PAGES = 200
+/** Below this, restoring is fast enough that a spinner would only flicker. */
+const LOADER_DELAY_MS = 200
 
 export function ReaderView() {
   const state = useAtomValue(readerAtom)
@@ -61,21 +64,20 @@ export function ReaderView() {
   }, [bookmark])
 
   /*
-   * Places the bookmark on the line being read, or moves it here. Long-pressing
-   * the 20px margin is unusable on a phone, and going back to the bookmark is
-   * the pill's job — so the button is free to be the one-tap way to set it.
-   * Pressing it again on the same line takes it away.
+   * The text stays hidden while its position is being restored, so a long
+   * document that takes a moment otherwise looks like the app has frozen.
+   * The spinner only appears once that wait has run past a short delay —
+   * the common case restores within a couple of frames and must never see it.
    */
-  const bookmarkAction = useCallback(() => {
-    const content = contentRef.current
-    if (!content) return
-    const anchor = anchorFromPoint(content.getBoundingClientRect().left + 2, PROBE_OFFSET_PX)
-    if (!anchor) return
-
-    const onSameLine =
-      bookmark?.blockId === anchor.blockId && bookmark?.charOffset === anchor.charOffset
-    persistBookmark(onSameLine ? null : anchor)
-  }, [bookmark, persistBookmark])
+  const [showLoader, setShowLoader] = useState(false)
+  useEffect(() => {
+    if (!restoring) return undefined
+    const timer = window.setTimeout(() => setShowLoader(true), LOADER_DELAY_MS)
+    return () => {
+      window.clearTimeout(timer)
+      setShowLoader(false)
+    }
+  }, [restoring])
 
   if (!state) return null
 
@@ -91,17 +93,22 @@ export function ReaderView() {
       <TopBar
         title={entry.title}
         progress={progress}
-        hasBookmark={bookmark !== null}
         onBack={() => {
           // Save first: the library reads the progress back as soon as it mounts.
           void flush().then(closeDocument)
         }}
-        onBookmarkAction={bookmarkAction}
         onToggleSettings={() => setSettingsOpen((open) => !open)}
         settingsOpen={settingsOpen}
       />
 
       {settingsOpen && <SettingsPanel onClose={() => setSettingsOpen(false)} />}
+
+      {showLoader && (
+        <div className={styles.restoringIndicator} role="status" aria-live="polite">
+          <Loader2 size={22} className={styles.restoringSpinner} aria-hidden="true" />
+          <span className="sr-only">Reprise de la lecture…</span>
+        </div>
+      )}
 
       <main className={styles.column}>
         <div className={styles.columnInner}>

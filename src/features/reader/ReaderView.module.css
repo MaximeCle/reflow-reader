@@ -47,9 +47,50 @@
   color: var(--color-muted);
 }
 
+/*
+ * Only shown once restoring has taken a while — a book opening instantly
+ * must never flash this. Fixed rather than scrolled to: the page has
+ * already jumped to the target position, the text sitting there is just
+ * hidden, so the indicator belongs where the eye actually is.
+ */
+.restoringIndicator {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 4;
+  transform: translate(-50%, -50%);
+  animation: reader-loader-in 200ms ease-out;
+}
+
+.restoringSpinner {
+  display: block;
+  color: var(--color-muted);
+  animation: reader-loader-spin 900ms linear infinite;
+}
+
+@keyframes reader-loader-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes reader-loader-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .content {
     transition: none;
+  }
+
+  .restoringIndicator {
+    animation: none;
+  }
+
+  .restoringSpinner {
+    animation: none;
   }
 }
 
