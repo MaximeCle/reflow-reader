@@ -43,7 +43,8 @@ export function SyncSection({ onJoined }: SyncSectionProps) {
     try {
       await joinSync(generateSyncCode())
       onJoined()
-    } catch {
+    } catch (err) {
+      console.error('[sync] generate failed', err)
       setError('Impossible de créer un code. Vérifiez votre connexion.')
     } finally {
       setBusy(false)
@@ -62,7 +63,8 @@ export function SyncSection({ onJoined }: SyncSectionProps) {
       await joinSync(normalizeSyncCode(pastedCode))
       setPastedCode('')
       onJoined()
-    } catch {
+    } catch (err) {
+      console.error('[sync] join failed', err)
       setError('Impossible de rejoindre ce groupe. Vérifiez le code et votre connexion.')
     } finally {
       setBusy(false)
