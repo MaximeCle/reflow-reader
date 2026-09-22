@@ -1,6 +1,6 @@
 import { useAtomValue, useSetAtom } from 'jotai'
 import { Loader2 } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { bookmarkAtom, closeDocumentAtom, readerAtom } from '../../atoms/reader'
 import { settingsAtom } from '../../atoms/settings'
 import type { Anchor } from '../../lib/storage/types'
@@ -9,6 +9,7 @@ import { BookmarkContextMenu } from '../bookmark/BookmarkContextMenu'
 import { BookmarkLayer } from '../bookmark/BookmarkLayer'
 import { anchorFromPoint } from '../bookmark/anchor'
 import { BookmarkReturn } from './BookmarkReturn'
+import { ChaptersPanel } from './ChaptersPanel'
 import { DocumentFlow } from './DocumentFlow'
 import { SettingsPanel } from './SettingsPanel'
 import { TopBar } from './TopBar'
@@ -27,13 +28,17 @@ export function ReaderView() {
   const settings = useAtomValue(settingsAtom)
   const contentRef = useRef<HTMLElement | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [chaptersOpen, setChaptersOpen] = useState(false)
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; anchor: Anchor } | null>(
     null,
   )
 
   const entryId = state?.entry.id ?? ''
-  const blocks = state?.document.blocks ?? []
+  const blocks = useMemo(() => state?.document.blocks ?? [], [state])
   const bookmark = state?.entry.bookmark ?? null
+  // The biggest heading tier stands in for chapter titles: no separate
+  // structure to maintain, and it already draws each one apart in the text.
+  const chapters = useMemo(() => blocks.filter((block) => block.kind === 'heading-2'), [blocks])
 
   // Reopening lands on the bookmark, or failing that on the last read position.
   const { progress, flush, restoring } = useReadingPosition({
@@ -62,6 +67,12 @@ export function ReaderView() {
     const content = contentRef.current
     if (content && bookmark) scrollToAnchor(content, bookmark)
   }, [bookmark])
+
+  const goToChapter = useCallback((blockId: string) => {
+    const content = contentRef.current
+    if (content) scrollToAnchor(content, { blockId, charOffset: 0 })
+    setChaptersOpen(false)
+  }, [])
 
   /*
    * The text stays hidden while its position is being restored, so a long
@@ -97,11 +108,22 @@ export function ReaderView() {
           // Save first: the library reads the progress back as soon as it mounts.
           void flush().then(closeDocument)
         }}
+        hasChapters={chapters.length > 0}
+        chaptersOpen={chaptersOpen}
+        onToggleChapters={() => setChaptersOpen((open) => !open)}
         onToggleSettings={() => setSettingsOpen((open) => !open)}
         settingsOpen={settingsOpen}
       />
 
       {settingsOpen && <SettingsPanel onClose={() => setSettingsOpen(false)} />}
+
+      {chaptersOpen && (
+        <ChaptersPanel
+          chapters={chapters}
+          onSelect={goToChapter}
+          onClose={() => setChaptersOpen(false)}
+        />
+      )}
 
       {showLoader && (
         <div className={styles.restoringIndicator} role="status" aria-live="polite">

@@ -25,9 +25,39 @@
   font-family: var(--font-reading);
   font-size: 15px;
   font-weight: 500;
-  white-space: nowrap;
+}
+
+.titleText {
+  min-width: 0;
   overflow: hidden;
+  white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+/* Discreet on purpose: same text as the plain title, just interactive —
+   the chevron is the only hint there is more here than a label. */
+.titleButton {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+
+.titleChevron {
+  flex: none;
+  color: var(--color-muted);
+  transition: transform var(--transition);
+}
+
+.titleButton[aria-expanded='true'] .titleChevron {
+  transform: rotate(180deg);
 }
 
 .progress {

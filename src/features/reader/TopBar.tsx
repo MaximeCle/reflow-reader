@@ -1,4 +1,4 @@
-import { ArrowLeft, Settings2 } from 'lucide-react'
+import { ArrowLeft, ChevronDown, Settings2 } from 'lucide-react'
 import styles from './TopBar.module.css'
 
 interface TopBarProps {
@@ -6,6 +6,10 @@ interface TopBarProps {
   /** 0 to 1. */
   progress: number
   onBack: () => void
+  /** Whether this document has detected chapter titles worth listing. */
+  hasChapters: boolean
+  chaptersOpen: boolean
+  onToggleChapters: () => void
   onToggleSettings: () => void
   settingsOpen: boolean
 }
@@ -14,6 +18,9 @@ export function TopBar({
   title,
   progress,
   onBack,
+  hasChapters,
+  chaptersOpen,
+  onToggleChapters,
   onToggleSettings,
   settingsOpen,
 }: TopBarProps) {
@@ -26,8 +33,24 @@ export function TopBar({
           <ArrowLeft size={18} aria-hidden="true" />
         </button>
 
-        <h1 className={styles.title} title={title}>
-          {title}
+        <h1 className={styles.title}>
+          {hasChapters ? (
+            <button
+              type="button"
+              className={styles.titleButton}
+              onClick={onToggleChapters}
+              data-chapters-toggle=""
+              aria-expanded={chaptersOpen}
+              aria-label={`Chapitres de « ${title} »`}
+            >
+              <span className={styles.titleText}>{title}</span>
+              <ChevronDown size={13} className={styles.titleChevron} aria-hidden="true" />
+            </button>
+          ) : (
+            <span className={styles.titleText} title={title}>
+              {title}
+            </span>
+          )}
         </h1>
 
         <span className={styles.progress} aria-label={`Progression : ${percent} %`}>
