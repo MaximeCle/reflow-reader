@@ -67,6 +67,18 @@
   contain-intrinsic-size: auto 6em;
 }
 
+/*
+ * Skipped blocks report a fake `contain-intrinsic-size` height until the
+ * browser actually lays them out, so measuring a deep bookmark's real
+ * position needs every block above it laid out for real, however briefly.
+ * Toggled on and back off within the same synchronous measurement so
+ * nothing repaints in between and virtualization stays in effect while
+ * reading.
+ */
+:global([data-force-layout]) .virtualized {
+  content-visibility: visible;
+}
+
 /* Discreet origin page number, kept out of the text flow. */
 .paragraph[data-page-marker]::after,
 .heading2[data-page-marker]::after,

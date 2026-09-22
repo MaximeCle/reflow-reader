@@ -68,12 +68,20 @@ export function useReadingPosition({
       return
     }
 
-    const block = findBlockElement(content, target.blockId)
-    if (!block) return
+    // Forces every skipped block above the target to lay out for real, so
+    // its measured position reflects true heights rather than the ~6em
+    // placeholder virtualized blocks report until scrolled near.
+    content.dataset.forceLayout = 'true'
+    try {
+      const block = findBlockElement(content, target.blockId)
+      if (!block) return
 
-    const rect = rectAt(block, target.charOffset) ?? block.getBoundingClientRect()
-    window.scrollTo({ top: window.scrollY + rect.top - PROBE_OFFSET_PX, behavior: 'auto' })
-    restoredRef.current = true
+      const rect = rectAt(block, target.charOffset) ?? block.getBoundingClientRect()
+      window.scrollTo({ top: window.scrollY + rect.top - PROBE_OFFSET_PX, behavior: 'auto' })
+      restoredRef.current = true
+    } finally {
+      delete content.dataset.forceLayout
+    }
   }, [blocks.length, contentRef])
 
   useEffect(() => {
