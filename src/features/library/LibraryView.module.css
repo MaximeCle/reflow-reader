@@ -79,61 +79,6 @@
   text-wrap: pretty;
 }
 
-/* ── Drop zone (compact) ───────────────────────────────────────────── */
-
-.dropZone {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  max-width: 420px;
-  margin-top: 26px;
-  padding: 10px 14px;
-  border: 1px dashed var(--color-line);
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background-color var(--transition), border-color var(--transition);
-}
-
-.dropZone:hover {
-  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-line));
-}
-
-.dropZoneActive {
-  border-color: var(--color-accent);
-  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
-}
-
-.dropZoneBusy {
-  cursor: progress;
-  opacity: 0.65;
-}
-
-.dropIcon {
-  flex: none;
-  color: var(--color-accent);
-}
-
-.dropLabel {
-  font-size: 13.5px;
-  color: var(--color-text);
-}
-
-.dropSub {
-  font-size: 13.5px;
-  color: var(--color-muted);
-}
-
-.fileInput {
-  display: none;
-}
-
-.error {
-  max-width: 420px;
-  margin: 14px 0 0;
-  font-size: 13px;
-  color: var(--color-accent);
-}
-
 /* ── Resume card ────────────────────────────────────────────────────── */
 
 .resumeCard {

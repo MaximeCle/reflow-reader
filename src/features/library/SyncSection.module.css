@@ -1,37 +1,14 @@
-.wrapper {
-  position: relative;
-  flex: none;
-}
-
-.toggle {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  font-size: 12.5px;
-  color: var(--color-muted);
-  text-decoration: none;
-  text-underline-offset: 2px;
-}
-
-.toggle:hover {
-  color: var(--color-text);
-  text-decoration: underline;
-}
-
-/* Floats above its toggle so opening it never reflows the footer. */
-.panel {
-  position: absolute;
-  z-index: 10;
-  right: 0;
-  bottom: calc(100% + 10px);
+.section {
   display: grid;
   gap: 10px;
-  width: max(260px, 100%);
-  padding: 14px 16px;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius);
-  background: var(--color-surface);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.14);
+}
+
+.label {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 450;
+  letter-spacing: 0.08em;
+  color: var(--color-muted);
 }
 
 .hint {

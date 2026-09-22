@@ -1,12 +1,12 @@
 import { useAtomValue, useSetAtom } from 'jotai'
-import { Check, FilePlus2, Pencil, Trash2, X } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Check, Pencil, Trash2, X } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { applyRemoteEntryAtom, libraryAtom, refreshLibraryAtom } from '../../atoms/library'
 import { syncStateAtom } from '../../atoms/sync'
 import { subscribeToLibraryChanges } from '../../lib/sync/syncClient'
 import type { LibraryEntry } from '../../lib/storage/types'
+import { AddMenu } from './AddMenu'
 import { spineColorFor } from './spineColor'
-import { SyncPanel } from './SyncPanel'
 import { useLibraryActions } from './useLibraryActions'
 import styles from './LibraryView.module.css'
 
@@ -141,8 +141,6 @@ export function LibraryView() {
   const applyRemoteEntry = useSetAtom(applyRemoteEntryAtom)
   const syncState = useAtomValue(syncStateAtom)
   const { importFile, openEntry, deleteEntry, renameEntry, importing, error } = useLibraryActions()
-  const inputRef = useRef<HTMLInputElement>(null)
-  const [dragging, setDragging] = useState(false)
   const [query, setQuery] = useState('')
 
   useEffect(() => {
@@ -174,6 +172,12 @@ export function LibraryView() {
           <span className={styles.count}>
             {entries.length} {entries.length === 1 ? 'titre' : 'titres'}
           </span>
+          <AddMenu
+            onImport={(file) => void importFile(file)}
+            importing={importing}
+            error={error}
+            onSynced={() => void refreshLibrary()}
+          />
         </div>
       </header>
 
@@ -187,62 +191,6 @@ export function LibraryView() {
           Le texte est recomposé : colonne unique, marges justes, typographie de lecture. Vos
           fichiers restent sur votre appareil.
         </p>
-
-        <div
-          className={`${styles.dropZone} ${dragging ? styles.dropZoneActive : ''} ${
-            importing ? styles.dropZoneBusy : ''
-          }`}
-          role="button"
-          tabIndex={importing ? -1 : 0}
-          aria-disabled={importing}
-          onClick={() => !importing && inputRef.current?.click()}
-          onKeyDown={(event) => {
-            if (importing) return
-            if (event.key === 'Enter' || event.key === ' ') {
-              event.preventDefault()
-              inputRef.current?.click()
-            }
-          }}
-          onDragOver={(event) => {
-            event.preventDefault()
-            if (!importing) setDragging(true)
-          }}
-          onDragLeave={() => setDragging(false)}
-          onDrop={(event) => {
-            event.preventDefault()
-            setDragging(false)
-            const file = event.dataTransfer.files[0]
-            if (file && !importing) void importFile(file)
-          }}
-        >
-          <FilePlus2 size={16} className={styles.dropIcon} aria-hidden="true" />
-          {importing ? (
-            <span className={styles.dropLabel}>Lecture en cours…</span>
-          ) : (
-            <>
-              <span className={styles.dropLabel}>Déposez un PDF</span>
-              <span className={styles.dropSub}>ou parcourir</span>
-            </>
-          )}
-          <input
-            ref={inputRef}
-            className={styles.fileInput}
-            type="file"
-            accept="application/pdf,.pdf"
-            disabled={importing}
-            onChange={(event) => {
-              const file = event.target.files?.[0]
-              if (file) void importFile(file)
-              event.target.value = ''
-            }}
-          />
-        </div>
-
-        {error && (
-          <p className={styles.error} role="alert">
-            {error}
-          </p>
-        )}
 
         {current && (
           <button
@@ -311,8 +259,6 @@ export function LibraryView() {
           <span className={styles.footerText}>
             {syncState.code ? 'Bibliothèque synchronisée.' : 'Traitement local, aucun envoi.'}
           </span>
-          <div className={styles.spacer} />
-          <SyncPanel onJoined={() => void refreshLibrary()} />
         </div>
       </footer>
     </div>
