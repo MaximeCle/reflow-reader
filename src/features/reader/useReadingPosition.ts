@@ -7,6 +7,55 @@ import { saveEntryUpdate } from '../../lib/sync/syncedStorage'
 /** Where the "current line" is read from, below the top bar. */
 export const PROBE_OFFSET_PX = 96
 const SAVE_DEBOUNCE_MS = 800
+/**
+ * How long to keep holding a restored line in place. The reading webfont is
+ * fetched with `display: swap`, so the whole column reflows well after the
+ * first paint — a single scroll on mount lands far off on a long document.
+ */
+const SETTLE_MS = 3000
+/** Closer than this and the line is in place; chasing it would only jitter. */
+const TOLERANCE_PX = 1
+
+/** How far the anchored line sits from where it belongs, null if not in the DOM. */
+function anchorOffset(content: HTMLElement, anchor: Anchor): number | null {
+  const block = findBlockElement(content, anchor.blockId)
+  if (!block) return null
+  const rect = rectAt(block, anchor.charOffset) ?? block.getBoundingClientRect()
+  return rect.top - PROBE_OFFSET_PX
+}
+
+/**
+ * Measures with virtualization off: a skipped block reports a placeholder
+ * height, so a line deep in a long document otherwise resolves thousands of
+ * pixels short of where it really sits.
+ */
+function measure(content: HTMLElement, anchor: Anchor, force: boolean): number | null {
+  if (!force) return anchorOffset(content, anchor)
+  content.dataset.forceLayout = 'true'
+  try {
+    return anchorOffset(content, anchor)
+  } finally {
+    delete content.dataset.forceLayout
+  }
+}
+
+/**
+ * Puts an anchored line just under the top bar. Returns false when the block
+ * is not in the DOM yet, so the caller can retry as extraction adds more.
+ *
+ * The first pass measures with virtualization forced off to land in the right
+ * neighbourhood; the passes after it measure the resting layout, which is what
+ * the reader actually ends up looking at.
+ */
+export function scrollToAnchor(content: HTMLElement, anchor: Anchor, force = true): boolean {
+  for (let pass = 0; pass < 3; pass += 1) {
+    const offset = measure(content, anchor, force && pass === 0)
+    if (offset === null) return false
+    if (Math.abs(offset) <= TOLERANCE_PX) break
+    window.scrollTo({ top: window.scrollY + offset, behavior: 'auto' })
+  }
+  return true
+}
 
 interface Options {
   contentRef: React.RefObject<HTMLElement | null>
@@ -34,9 +83,13 @@ export function useReadingPosition({
   restoreTo,
 }: Options): ReadingPosition {
   const [progress, setProgress] = useState(0)
+  // Drives the tracking effect: recording where someone is reading only makes
+  // sense once the page has stopped moving under them.
+  const [settled, setSettled] = useState(false)
   const pendingRef = useRef<{ anchor: Anchor; progress: number } | null>(null)
   const timerRef = useRef(0)
   const restoredRef = useRef(false)
+  const settledRef = useRef(false)
   // Captured once: placing a bookmark later must not scroll the reader.
   const restoreToRef = useRef(restoreTo)
 
@@ -65,31 +118,78 @@ export function useReadingPosition({
     const content = contentRef.current
     if (!target || !content) {
       restoredRef.current = true
+      settledRef.current = true
+      setSettled(true)
       return
     }
 
-    // Forces every skipped block above the target to lay out for real, so
-    // its measured position reflects true heights rather than the ~6em
-    // placeholder virtualized blocks report until scrolled near.
-    content.dataset.forceLayout = 'true'
-    try {
-      const block = findBlockElement(content, target.blockId)
-      if (!block) return
+    if (scrollToAnchor(content, target)) restoredRef.current = true
+  }, [blocks.length, contentRef])
 
-      const rect = rectAt(block, target.charOffset) ?? block.getBoundingClientRect()
-      window.scrollTo({ top: window.scrollY + rect.top - PROBE_OFFSET_PX, behavior: 'auto' })
+  /*
+   * The column keeps moving after that first scroll — the webfont swaps in and
+   * reflows every paragraph, extraction appends blocks — so hold the line in
+   * place until it stops moving, the window runs out, or the reader takes over.
+   */
+  useEffect(() => {
+    if (settledRef.current) return
+
+    const target = restoreToRef.current
+    const content = contentRef.current
+    if (!target || !content) {
+      settledRef.current = true
+      setSettled(true)
+      return
+    }
+
+    let frame = 0
+    const deadline = performance.now() + SETTLE_MS
+    const controller = new AbortController()
+
+    const settle = () => {
+      if (frame !== 0) window.cancelAnimationFrame(frame)
+      frame = 0
+      controller.abort()
+      settledRef.current = true
+      // Found or not, restoring is over: a later jump would yank the page
+      // out from under someone who has started reading.
       restoredRef.current = true
-    } finally {
-      delete content.dataset.forceLayout
+      setSettled(true)
+    }
+
+    const tick = () => {
+      if (performance.now() > deadline) {
+        settle()
+        return
+      }
+      if (restoredRef.current) {
+        const offset = anchorOffset(content, target)
+        if (offset !== null && Math.abs(offset) > TOLERANCE_PX) {
+          window.scrollTo({ top: window.scrollY + offset, behavior: 'auto' })
+        }
+      }
+      frame = window.requestAnimationFrame(tick)
+    }
+
+    // Anything deliberate hands the page back: never fight a reader.
+    const { signal } = controller
+    for (const event of ['wheel', 'touchstart', 'keydown', 'pointerdown'] as const) {
+      window.addEventListener(event, settle, { signal, passive: true })
+    }
+    frame = window.requestAnimationFrame(tick)
+
+    return () => {
+      if (frame !== 0) window.cancelAnimationFrame(frame)
+      controller.abort()
     }
   }, [blocks.length, contentRef])
 
   useEffect(() => {
-    if (entryId === '') return
+    if (entryId === '' || !settled) return
 
     let frame = 0
     const onScroll = () => {
-      if (frame !== 0 || !restoredRef.current) return
+      if (frame !== 0) return
       frame = window.requestAnimationFrame(() => {
         frame = 0
         const content = contentRef.current
@@ -121,7 +221,7 @@ export function useReadingPosition({
       window.clearTimeout(timerRef.current)
       void flush()
     }
-  }, [blocks.length, contentRef, entryId, flush, indexById])
+  }, [blocks.length, contentRef, entryId, flush, indexById, settled])
 
   return { progress, flush }
 }

@@ -7,7 +7,8 @@ interface TopBarProps {
   progress: number
   hasBookmark: boolean
   onBack: () => void
-  onToggleBookmark: () => void
+  /** Jumps to the bookmark when there is one, places it otherwise. */
+  onBookmarkAction: () => void
   onToggleSettings: () => void
   settingsOpen: boolean
 }
@@ -17,7 +18,7 @@ export function TopBar({
   progress,
   hasBookmark,
   onBack,
-  onToggleBookmark,
+  onBookmarkAction,
   onToggleSettings,
   settingsOpen,
 }: TopBarProps) {
@@ -41,9 +42,9 @@ export function TopBar({
         <button
           type="button"
           className={styles.iconButton}
-          onClick={onToggleBookmark}
-          aria-pressed={hasBookmark}
-          aria-label={hasBookmark ? 'Retirer le marque-page' : 'Poser un marque-page ici'}
+          onClick={onBookmarkAction}
+          title={hasBookmark ? 'Aller au marque-page' : 'Poser un marque-page ici'}
+          aria-label={hasBookmark ? 'Aller au marque-page' : 'Poser un marque-page ici'}
         >
           {hasBookmark ? (
             <BookmarkCheck size={18} aria-hidden="true" />

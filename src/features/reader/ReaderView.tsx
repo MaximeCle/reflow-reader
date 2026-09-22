@@ -10,7 +10,7 @@ import { anchorFromPoint } from '../bookmark/anchor'
 import { DocumentFlow } from './DocumentFlow'
 import { SettingsPanel } from './SettingsPanel'
 import { TopBar } from './TopBar'
-import { PROBE_OFFSET_PX, useReadingPosition } from './useReadingPosition'
+import { PROBE_OFFSET_PX, scrollToAnchor, useReadingPosition } from './useReadingPosition'
 import styles from './ReaderView.module.css'
 
 /** Above this, off-screen blocks are skipped by the browser. */
@@ -54,13 +54,18 @@ export function ReaderView() {
     setContextMenu({ x: event.clientX, y: event.clientY, anchor })
   }, [])
 
-  const toggleBookmarkAtReadingLine = useCallback(() => {
-    if (bookmark) {
-      persistBookmark(null)
-      return
-    }
+  /*
+   * With a bookmark set, the button takes you back to it — the thing you
+   * actually want mid-book. Removing it stays a click on the marker itself,
+   * which the jump brings into view anyway.
+   */
+  const bookmarkAction = useCallback(() => {
     const content = contentRef.current
     if (!content) return
+    if (bookmark) {
+      scrollToAnchor(content, bookmark)
+      return
+    }
     const anchor = anchorFromPoint(content.getBoundingClientRect().left + 2, PROBE_OFFSET_PX)
     if (anchor) persistBookmark(anchor)
   }, [bookmark, persistBookmark])
@@ -84,7 +89,7 @@ export function ReaderView() {
           // Save first: the library reads the progress back as soon as it mounts.
           void flush().then(closeDocument)
         }}
-        onToggleBookmark={toggleBookmarkAtReadingLine}
+        onBookmarkAction={bookmarkAction}
         onToggleSettings={() => setSettingsOpen((open) => !open)}
         settingsOpen={settingsOpen}
       />
