@@ -1,6 +1,6 @@
 import { useAtomValue, useSetAtom } from 'jotai'
 import { Check, Copy, Loader2 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { joinSyncAtom, leaveSyncAtom, syncStateAtom } from '../../atoms/sync'
 import { generateSyncCode, isValidSyncCode, normalizeSyncCode } from '../../lib/sync/syncCode'
 import styles from './SyncPanel.module.css'
@@ -15,6 +15,23 @@ export function SyncPanel({ onJoined }: SyncPanelProps) {
   const joinSync = useSetAtom(joinSyncAtom)
   const leaveSync = useSetAtom(leaveSyncAtom)
   const [open, setOpen] = useState(false)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onPointerDown = (event: PointerEvent) => {
+      if (!wrapperRef.current?.contains(event.target as Node)) setOpen(false)
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false)
+    }
+    window.addEventListener('pointerdown', onPointerDown, true)
+    window.addEventListener('keydown', onKeyDown)
+    return () => {
+      window.removeEventListener('pointerdown', onPointerDown, true)
+      window.removeEventListener('keydown', onKeyDown)
+    }
+  }, [open])
   const [pastedCode, setPastedCode] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -67,7 +84,7 @@ export function SyncPanel({ onJoined }: SyncPanelProps) {
   }
 
   return (
-    <div className={styles.wrapper}>
+    <div className={styles.wrapper} ref={wrapperRef}>
       <button type="button" className={styles.toggle} onClick={() => setOpen((value) => !value)}>
         {syncState.code ? `Synchronisé · ${syncState.code}` : 'Synchroniser mes appareils'}
       </button>
