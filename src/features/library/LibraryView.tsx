@@ -6,19 +6,15 @@ import { syncStateAtom } from '../../atoms/sync'
 import { subscribeToLibraryChanges } from '../../lib/sync/syncClient'
 import type { LibraryEntry } from '../../lib/storage/types'
 import { AddMenu } from './AddMenu'
-import { spineColorFor } from './spineColor'
+import { spineColorFor, spineColorsFor } from './spineColor'
 import { useLibraryActions } from './useLibraryActions'
 import styles from './LibraryView.module.css'
 
 const dateFormat = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' })
 
-function Spine({ id, width, height }: { id: string; width: number; height: number }) {
+function Spine({ color, width, height }: { color: string; width: number; height: number }) {
   return (
-    <div
-      className={styles.spine}
-      style={{ width, height, background: spineColorFor(id) }}
-      aria-hidden="true"
-    >
+    <div className={styles.spine} style={{ width, height, background: color }} aria-hidden="true">
       <span className={styles.spineHighlight} />
     </div>
   )
@@ -40,11 +36,13 @@ function remainingLabel(entry: LibraryEntry): string {
 
 function LibraryRow({
   entry,
+  color,
   onOpen,
   onDelete,
   onRename,
 }: {
   entry: LibraryEntry
+  color: string
   onOpen: () => void
   onDelete: () => void
   onRename: (title: string) => void
@@ -73,7 +71,7 @@ function LibraryRow({
             commit()
           }}
         >
-          <Spine id={entry.id} width={30} height={44} />
+          <Spine color={color} width={30} height={44} />
           <input
             className={styles.rowEditInput}
             value={draft}
@@ -103,7 +101,7 @@ function LibraryRow({
   return (
     <li className={styles.row}>
       <button type="button" className={styles.rowMain} onClick={onOpen}>
-        <Spine id={entry.id} width={30} height={44} />
+        <Spine color={color} width={30} height={44} />
         <span className={styles.rowText}>
           <span className={styles.rowTitle}>{entry.title}</span>
           <span className={styles.rowMeta}>{rowMeta(entry)}</span>
@@ -156,6 +154,14 @@ export function LibraryView() {
   // match, since entries are sorted by lastReadAt.
   const current = entries.find((entry) => entry.progress < 1)
 
+  // Computed over the whole library, not just the filtered view, so a
+  // search never reshuffles which color goes with which book.
+  const spineColors = useMemo(
+    () => spineColorsFor(entries.map((entry) => entry.id)),
+    [entries],
+  )
+  const colorFor = (id: string) => spineColors.get(id) ?? spineColorFor(id)
+
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase()
     if (!needle) return entries
@@ -199,7 +205,7 @@ export function LibraryView() {
             onClick={() => void openEntry(current)}
             aria-label={`Continuer « ${current.title} »`}
           >
-            <Spine id={current.id} width={56} height={82} />
+            <Spine color={colorFor(current.id)} width={56} height={82} />
             <span className={styles.resumeInfo}>
               <span className={styles.resumeEyebrow}>Reprendre</span>
               <span className={styles.resumeTitle}>{current.title}</span>
@@ -243,6 +249,7 @@ export function LibraryView() {
                   <LibraryRow
                     key={entry.id}
                     entry={entry}
+                    color={colorFor(entry.id)}
                     onOpen={() => void openEntry(entry)}
                     onDelete={() => void deleteEntry(entry.id)}
                     onRename={(title) => void renameEntry(entry.id, title)}
