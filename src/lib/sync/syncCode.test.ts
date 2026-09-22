@@ -68,4 +68,16 @@ describe('formatSyncCode', () => {
   it('regroupe aussi une saisie partielle', () => {
     expect(formatSyncCode('a3f9kq')).toBe('A3F9-KQ')
   })
+
+  /*
+   * L'invariant dont dépend la synchro : l'appareil qui génère et celui qui
+   * rejoint doivent aboutir à la même chaîne, sinon ils s'inscrivent dans deux
+   * groupes distincts et le second ne voit jamais la bibliothèque du premier.
+   */
+  it('ramène toute saisie à la forme exacte du code généré', () => {
+    const generated = generateSyncCode()
+    expect(formatSyncCode(normalizeSyncCode(generated))).toBe(generated)
+    expect(formatSyncCode(generated.toLowerCase())).toBe(generated)
+    expect(formatSyncCode(` ${generated} `)).toBe(generated)
+  })
 })

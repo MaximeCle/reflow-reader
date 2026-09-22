@@ -1,5 +1,6 @@
 import { createClient, type RealtimeChannel, type SupabaseClient } from '@supabase/supabase-js'
 import { fromLibraryEntryRow, toLibraryEntryRow, type LibraryEntryRow } from './libraryEntryRow'
+import { formatSyncCode } from './syncCode'
 import type { ExtractedDocument } from '../pdf/types'
 import type { LibraryEntry } from '../storage/types'
 
@@ -55,7 +56,15 @@ async function ensureSession(supabase: SupabaseClient): Promise<void> {
     const { error } = await supabase.auth.signInAnonymously()
     if (error) throw error
   })()
-  return sessionReady
+
+  try {
+    await sessionReady
+  } catch (error) {
+    // Never cache the failure: turning anonymous sign-ins on, or simply
+    // coming back online, must not need a page reload to take effect.
+    sessionReady = null
+    throw error
+  }
 }
 
 /**
@@ -66,10 +75,14 @@ async function ensureSession(supabase: SupabaseClient): Promise<void> {
 export async function joinSync(code: string): Promise<void> {
   const supabase = getClient()
   if (!supabase) throw new Error('La synchronisation n’est pas configurée sur ce déploiement.')
+  // The group key is the formatted code, whatever shape it was typed in:
+  // generating and joining have to land on the same string or the two
+  // devices end up in separate, silently empty groups.
+  const canonical = formatSyncCode(code)
   await ensureSession(supabase)
-  const { error } = await supabase.rpc('join_sync_group', { target_code: code })
+  const { error } = await supabase.rpc('join_sync_group', { target_code: canonical })
   if (error) throw error
-  setSyncCode(code)
+  setSyncCode(canonical)
 }
 
 /** Stops this device from syncing. Other devices in the group are unaffected. */

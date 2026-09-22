@@ -2,7 +2,7 @@ import { useAtomValue, useSetAtom } from 'jotai'
 import { Check, Copy, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import { joinSyncAtom, leaveSyncAtom, syncStateAtom } from '../../atoms/sync'
-import { generateSyncCode, isValidSyncCode, normalizeSyncCode } from '../../lib/sync/syncCode'
+import { generateSyncCode, isValidSyncCode } from '../../lib/sync/syncCode'
 import styles from './SyncSection.module.css'
 
 interface SyncSectionProps {
@@ -60,7 +60,7 @@ export function SyncSection({ onJoined }: SyncSectionProps) {
     setError(null)
     setBusy(true)
     try {
-      await joinSync(normalizeSyncCode(pastedCode))
+      await joinSync(pastedCode)
       setPastedCode('')
       onJoined()
     } catch (err) {
