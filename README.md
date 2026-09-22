@@ -82,9 +82,12 @@ avant, le panneau de synchro reste invisible) :
 1. Créer un projet sur [supabase.com](https://supabase.com) (offre gratuite).
 2. *Authentication → Sign In / Providers → Anonymous Sign-Ins* : activer.
 3. *SQL Editor* : coller et exécuter `supabase/schema.sql`.
-4. *Project Settings → API* : récupérer l'URL du projet et la clé `anon`
-   publique (elle est faite pour être publique ; la sécurité tient aux
-   policies RLS, pas au secret de cette clé).
+4. *Project Settings → API* : récupérer l'URL du projet et la clé publique du
+   client. Supabase en propose deux selon l'âge du projet — une *Publishable
+   key* (`sb_publishable_…`) et une clé `anon` héritée (un JWT `eyJ…`) : l'une
+   ou l'autre convient, prendre celle que le projet accepte. Les deux sont
+   faites pour être publiques ; la sécurité tient aux policies RLS, pas au
+   secret de cette clé. Ne jamais utiliser `service_role`, qui les contourne.
 5. Copier `.env.example` en `.env.local`, y renseigner `VITE_SUPABASE_URL` et
    `VITE_SUPABASE_ANON_KEY`.
 6. Sur Netlify (ou tout autre hébergeur), déclarer les deux mêmes variables
