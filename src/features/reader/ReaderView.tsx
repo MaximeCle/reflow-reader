@@ -7,6 +7,7 @@ import { saveEntryUpdate } from '../../lib/sync/syncedStorage'
 import { BookmarkContextMenu } from '../bookmark/BookmarkContextMenu'
 import { BookmarkLayer } from '../bookmark/BookmarkLayer'
 import { anchorFromPoint } from '../bookmark/anchor'
+import { BookmarkReturn } from './BookmarkReturn'
 import { DocumentFlow } from './DocumentFlow'
 import { SettingsPanel } from './SettingsPanel'
 import { TopBar } from './TopBar'
@@ -54,21 +55,26 @@ export function ReaderView() {
     setContextMenu({ x: event.clientX, y: event.clientY, anchor })
   }, [])
 
+  const goToBookmark = useCallback(() => {
+    const content = contentRef.current
+    if (content && bookmark) scrollToAnchor(content, bookmark)
+  }, [bookmark])
+
   /*
    * With a bookmark set, the button takes you back to it — the thing you
    * actually want mid-book. Removing it stays a click on the marker itself,
    * which the jump brings into view anyway.
    */
   const bookmarkAction = useCallback(() => {
-    const content = contentRef.current
-    if (!content) return
     if (bookmark) {
-      scrollToAnchor(content, bookmark)
+      goToBookmark()
       return
     }
+    const content = contentRef.current
+    if (!content) return
     const anchor = anchorFromPoint(content.getBoundingClientRect().left + 2, PROBE_OFFSET_PX)
     if (anchor) persistBookmark(anchor)
-  }, [bookmark, persistBookmark])
+  }, [bookmark, goToBookmark, persistBookmark])
 
   if (!state) return null
 
@@ -125,6 +131,13 @@ export function ReaderView() {
           )}
         </div>
       </main>
+
+      <BookmarkReturn
+        contentRef={contentRef}
+        bookmark={bookmark}
+        onReturn={goToBookmark}
+        layoutKey={`${settings.fontSize}:${settings.lineHeight}:${settings.font}:${extracted.blocks.length}`}
+      />
 
       {contextMenu && (
         <BookmarkContextMenu

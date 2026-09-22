@@ -1,0 +1,41 @@
+.pill {
+  position: fixed;
+  z-index: 6;
+  /* Clear of the reading column on a wide screen, and over the ragged right
+     edge rather than mid-line on a narrow one: it stays up while reading. */
+  right: 20px;
+  bottom: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06), 0 12px 28px -14px rgba(0, 0, 0, 0.35);
+  animation: bookmark-return-in 160ms ease-out;
+}
+
+.pill:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-line));
+}
+
+.pill svg {
+  color: var(--color-accent);
+}
+
+@keyframes bookmark-return-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pill {
+    animation: none;
+  }
+}
