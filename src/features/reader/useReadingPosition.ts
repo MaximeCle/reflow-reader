@@ -18,6 +18,10 @@ const SAVE_DEBOUNCE_MS = 800
 const SETTLE_MS = 3000
 /** Closer than this and the line is in place; chasing it would only jitter. */
 const TOLERANCE_PX = 1
+/** Frames the line must hold still before the text is worth showing. */
+const STABLE_FRAMES = 4
+/** Upper bound on hiding the text: a blank reader is worse than a nudge. */
+const REVEAL_TIMEOUT_MS = 700
 
 /** How far the anchored line sits from where it belongs, null if not in the DOM. */
 function anchorOffset(content: HTMLElement, anchor: Anchor): number | null {
@@ -73,6 +77,8 @@ interface ReadingPosition {
   progress: number
   /** Resolves once the position is on disk, so the library can read it back. */
   flush: () => Promise<void>
+  /** True while the saved line is still being put back: keep the text hidden. */
+  restoring: boolean
 }
 
 /**
@@ -89,6 +95,8 @@ export function useReadingPosition({
   // Drives the tracking effect: recording where someone is reading only makes
   // sense once the page has stopped moving under them.
   const [settled, setSettled] = useState(false)
+  // Opening at the top needs no correcting, so nothing has to be hidden.
+  const [restoring, setRestoring] = useState(restoreTo !== null)
   const pendingRef = useRef<{ anchor: Anchor; progress: number } | null>(null)
   const timerRef = useRef(0)
   const restoredRef = useRef(false)
@@ -142,6 +150,7 @@ export function useReadingPosition({
     if (!target || !content) {
       settledRef.current = true
       setSettled(true)
+      setRestoring(false)
       return
     }
 
@@ -149,10 +158,25 @@ export function useReadingPosition({
     const deadline = performance.now() + SETTLE_MS
     const controller = new AbortController()
 
+    let stableFrames = 0
+    // jsdom and older browsers have no font loading API: nothing to wait for.
+    let fontsReady = document.fonts === undefined
+    void document.fonts?.ready.then(() => {
+      fontsReady = true
+    })
+
+    const reveal = () => {
+      window.clearTimeout(revealTimer)
+      setRestoring(false)
+    }
+    // Never hold the text back for long, however unsettled it still looks.
+    const revealTimer = window.setTimeout(reveal, REVEAL_TIMEOUT_MS)
+
     const settle = () => {
       if (frame !== 0) window.cancelAnimationFrame(frame)
       frame = 0
       controller.abort()
+      reveal()
       settledRef.current = true
       // Found or not, restoring is over: a later jump would yank the page
       // out from under someone who has started reading.
@@ -167,9 +191,15 @@ export function useReadingPosition({
       }
       if (restoredRef.current) {
         const offset = anchorOffset(content, target)
-        if (offset !== null && Math.abs(offset) > TOLERANCE_PX) {
-          window.scrollTo({ top: window.scrollY + offset, behavior: 'auto' })
+        if (offset === null || Math.abs(offset) > TOLERANCE_PX) {
+          if (offset !== null) window.scrollTo({ top: window.scrollY + offset, behavior: 'auto' })
+          stableFrames = 0
+        } else {
+          stableFrames += 1
         }
+        // Held still across several frames with the real font in place: what
+        // the reader is about to see is what they will keep seeing.
+        if (fontsReady && stableFrames >= STABLE_FRAMES) reveal()
       }
       frame = window.requestAnimationFrame(tick)
     }
@@ -183,6 +213,7 @@ export function useReadingPosition({
 
     return () => {
       if (frame !== 0) window.cancelAnimationFrame(frame)
+      window.clearTimeout(revealTimer)
       controller.abort()
     }
   }, [blocks.length, contentRef])
@@ -226,5 +257,5 @@ export function useReadingPosition({
     }
   }, [blocks.length, contentRef, entryId, flush, indexById, settled])
 
-  return { progress, flush }
+  return { progress, flush, restoring }
 }

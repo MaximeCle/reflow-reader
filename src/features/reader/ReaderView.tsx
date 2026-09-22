@@ -33,7 +33,7 @@ export function ReaderView() {
   const bookmark = state?.entry.bookmark ?? null
 
   // Reopening lands on the bookmark, or failing that on the last read position.
-  const { progress, flush } = useReadingPosition({
+  const { progress, flush, restoring } = useReadingPosition({
     contentRef,
     blocks,
     entryId,
@@ -61,20 +61,21 @@ export function ReaderView() {
   }, [bookmark])
 
   /*
-   * With a bookmark set, the button takes you back to it — the thing you
-   * actually want mid-book. Removing it stays a click on the marker itself,
-   * which the jump brings into view anyway.
+   * Places the bookmark on the line being read, or moves it here. Long-pressing
+   * the 20px margin is unusable on a phone, and going back to the bookmark is
+   * the pill's job — so the button is free to be the one-tap way to set it.
+   * Pressing it again on the same line takes it away.
    */
   const bookmarkAction = useCallback(() => {
-    if (bookmark) {
-      goToBookmark()
-      return
-    }
     const content = contentRef.current
     if (!content) return
     const anchor = anchorFromPoint(content.getBoundingClientRect().left + 2, PROBE_OFFSET_PX)
-    if (anchor) persistBookmark(anchor)
-  }, [bookmark, goToBookmark, persistBookmark])
+    if (!anchor) return
+
+    const onSameLine =
+      bookmark?.blockId === anchor.blockId && bookmark?.charOffset === anchor.charOffset
+    persistBookmark(onSameLine ? null : anchor)
+  }, [bookmark, persistBookmark])
 
   if (!state) return null
 
@@ -114,7 +115,7 @@ export function ReaderView() {
 
           <article
             ref={contentRef}
-            className={styles.content}
+            className={`${styles.content} ${restoring ? styles.restoring : ''}`}
             lang="fr"
             onContextMenu={handleContextMenu}
           >

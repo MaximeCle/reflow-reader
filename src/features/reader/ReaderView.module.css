@@ -20,9 +20,20 @@
   padding: 0 var(--margin-gutter);
 }
 
+/*
+ * Restoring a position means scrolling, then nudging the line back as the
+ * webfont swaps in and reflows the column. Those nudges are real and cannot
+ * be avoided — but they can be kept off-screen: the text is revealed only
+ * once it has stopped moving.
+ */
+.restoring {
+  opacity: 0;
+}
+
 .content {
   display: block;
   margin: 0;
+  transition: opacity 180ms ease-out;
   font-family: var(--font-reading);
   font-size: var(--reading-font-size);
   line-height: var(--reading-line-height);
@@ -34,6 +45,12 @@
   font-family: var(--font-ui);
   font-size: 13px;
   color: var(--color-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .content {
+    transition: none;
+  }
 }
 
 @media (width <= 720px) {
