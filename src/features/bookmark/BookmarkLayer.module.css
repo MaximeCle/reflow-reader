@@ -15,12 +15,15 @@
   position: absolute;
   left: calc(var(--margin-gutter) - 12px);
   width: 3px;
-  height: calc(var(--reading-font-size) * var(--reading-line-height));
+  /* Set inline from the measured line's own rect — a heading or a footnote
+     has a different font size and line-height than a paragraph. This is
+     only a floor for the rare case that measurement comes back empty. */
+  min-height: 1em;
   padding: 0;
   border: 0;
   border-radius: 2px;
   background: var(--color-accent);
-  transition: top var(--transition);
+  transition: top var(--transition), height var(--transition);
 }
 
 .marker::after {

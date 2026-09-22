@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { Anchor } from '../../lib/storage/types'
-import { anchorFromPoint, rectForAnchor } from './anchor'
+import { anchorFromPoint, findBlockElement, rectAt } from './anchor'
 import styles from './BookmarkLayer.module.css'
 
 interface BookmarkLayerProps {
@@ -20,21 +20,34 @@ export function BookmarkLayer({
   onClear,
   layoutKey,
 }: BookmarkLayerProps) {
-  const [markerTop, setMarkerTop] = useState<number | null>(null)
+  const [marker, setMarker] = useState<{ top: number; height: number } | null>(null)
 
-  /** The visual position is never stored: it is recomputed from the anchor. */
+  /*
+   * The visual position is never stored: it is recomputed from the anchor.
+   * Height comes from the block's own computed line-height, not a fixed
+   * formula — a bookmark can land on a heading or a footnote, whose font
+   * size and line-height differ from a paragraph's. (The character rect
+   * itself is narrower than that: it measures glyph metrics, not the extra
+   * spacing line-height adds around them, so it reads short as a marker.)
+   */
   const measure = useCallback(() => {
     const content = contentRef.current
     if (!content || !bookmark) {
-      setMarkerTop(null)
+      setMarker(null)
       return
     }
-    const rect = rectForAnchor(content, bookmark)
-    if (!rect) {
-      setMarkerTop(null)
+    const block = findBlockElement(content, bookmark.blockId)
+    const rect = block ? rectAt(block, bookmark.charOffset) : null
+    if (!block || !rect) {
+      setMarker(null)
       return
     }
-    setMarkerTop(rect.top - content.getBoundingClientRect().top)
+    const lineHeight = parseFloat(getComputedStyle(block).lineHeight)
+    const height = Number.isFinite(lineHeight) ? lineHeight : rect.height
+    // The glyph rect sits centred in the taller line box (half-leading above
+    // and below it), so its own top is not the line's top.
+    const halfLeading = (height - rect.height) / 2
+    setMarker({ top: rect.top - halfLeading - content.getBoundingClientRect().top, height })
   }, [bookmark, contentRef])
 
   useEffect(() => {
@@ -76,11 +89,11 @@ export function BookmarkLayer({
   return (
     <>
       <div className={styles.hitArea} onClick={handleClick} />
-      {markerTop !== null && (
+      {marker !== null && (
         <button
           type="button"
           className={styles.marker}
-          style={{ top: `${markerTop}px` }}
+          style={{ top: `${marker.top}px`, height: `${marker.height}px` }}
           onClick={onClear}
           data-bookmark-marker=""
           title="Marque-page — cliquer pour le retirer"

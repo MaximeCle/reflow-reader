@@ -3,12 +3,28 @@
   top: 52px;
   left: 16px;
   z-index: 20;
-  width: min(320px, calc(100vw - 32px));
+  width: 320px;
   border: 1px solid var(--color-line);
   border-radius: var(--radius);
   background: var(--color-surface);
   box-shadow: 0 10px 30px rgb(0 0 0 / 12%);
   overflow: hidden;
+}
+
+/* No width cap here: a fixed max on a narrow screen leaves the panel
+   looking cut off to one side. It spans edge to edge instead, with its
+   own margins doing the work a centred max-width did on a wide screen. */
+@media (width <= 720px) {
+  .panel {
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
+
+  .item {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
 }
 
 .list {
