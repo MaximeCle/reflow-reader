@@ -1,9 +1,9 @@
 .pill {
   position: fixed;
   z-index: 6;
-  /* Clear of the reading column on a wide screen, and over the ragged right
-     edge rather than mid-line on a narrow one: it stays up while reading. */
-  right: 20px;
+  /* Left, not right: deployment widgets (Netlify's drawer among them) claim
+     the bottom-right corner and would sit on top of it. */
+  left: 20px;
   bottom: 24px;
   display: inline-flex;
   align-items: center;

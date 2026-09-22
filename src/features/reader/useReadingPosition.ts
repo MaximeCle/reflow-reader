@@ -4,8 +4,11 @@ import type { Block } from '../../lib/pdf/types'
 import type { Anchor } from '../../lib/storage/types'
 import { saveEntryUpdate } from '../../lib/sync/syncedStorage'
 
-/** Where the "current line" is read from, below the top bar. */
-export const PROBE_OFFSET_PX = 96
+/**
+ * Where the "current line" is read from: just clear of the 51px top bar, so a
+ * restored line sits right under it. Kept in step with `.column`'s top padding.
+ */
+export const PROBE_OFFSET_PX = 68
 const SAVE_DEBOUNCE_MS = 800
 /**
  * How long to keep holding a restored line in place. The reading webfont is

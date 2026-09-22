@@ -3,8 +3,10 @@
   background: var(--color-surface);
 }
 
+/* The top padding matches PROBE_OFFSET_PX: the first line of a fresh
+   document then opens exactly where a restored one is put back. */
 .column {
-  padding: 96px 0 40vh;
+  padding: 68px 0 40vh;
 }
 
 /*
@@ -42,6 +44,6 @@
   }
 
   .column {
-    padding-top: 80px;
+    padding-top: 68px;
   }
 }
