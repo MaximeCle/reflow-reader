@@ -4,14 +4,15 @@
 }
 
 .toggle {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px 6px 10px;
   border: 1px solid var(--color-line);
   border-radius: 999px;
   background: transparent;
   color: var(--color-muted);
+  font-size: 13px;
   transition: color var(--transition), border-color var(--transition);
 }
 
@@ -29,12 +30,20 @@
   top: calc(100% + 10px);
   display: grid;
   gap: 10px;
-  width: max(280px, 100%);
-  padding: 14px 16px;
+  width: min(320px, calc(100vw - 32px));
+  padding: 16px 18px;
   border: 1px solid var(--color-line);
   border-radius: var(--radius);
   background: var(--color-surface);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.14);
+}
+
+/* Grid/flex children default to a min-width based on their own content,
+   which lets an unshrinkable child (e.g. a button next to an input) force
+   the whole panel wider than its own border. Reset it so everything wraps
+   or shrinks inside the panel's actual width instead. */
+.panel * {
+  min-width: 0;
 }
 
 .label {
@@ -47,12 +56,16 @@
 
 .dropZone {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
+  justify-content: center;
+  gap: 6px;
+  min-height: 96px;
+  padding: 20px 16px;
   border: 1px dashed var(--color-line);
   border-radius: 10px;
   cursor: pointer;
+  text-align: center;
   transition: background-color var(--transition), border-color var(--transition);
 }
 
@@ -71,12 +84,12 @@
 }
 
 .dropLabel {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--color-text);
 }
 
 .dropSub {
-  font-size: 13px;
+  font-size: 12.5px;
   color: var(--color-muted);
 }
 

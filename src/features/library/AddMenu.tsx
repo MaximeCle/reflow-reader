@@ -43,10 +43,10 @@ export function AddMenu({ onImport, importing, error, onSynced }: AddMenuProps) 
         type="button"
         className={styles.toggle}
         onClick={() => setOpen((value) => !value)}
-        aria-label="Ajouter un PDF ou synchroniser mes appareils"
         aria-expanded={open}
       >
-        <Plus size={16} aria-hidden="true" />
+        <Plus size={15} aria-hidden="true" />
+        Ajouter
       </button>
 
       {open && (
