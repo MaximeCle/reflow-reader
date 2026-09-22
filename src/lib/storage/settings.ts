@@ -1,11 +1,12 @@
 export type Theme = 'light' | 'dark'
 
-export type ReadingFont = 'literata' | 'source-serif' | 'work-sans'
+export type ReadingFont = 'literata' | 'source-serif' | 'work-sans' | 'inter'
 
 export const READING_FONTS: ReadonlyArray<{ id: ReadingFont; label: string; stack: string }> = [
   { id: 'literata', label: 'Literata', stack: "'Literata', Georgia, serif" },
   { id: 'source-serif', label: 'Source Serif', stack: "'Source Serif 4', Georgia, serif" },
   { id: 'work-sans', label: 'Work Sans', stack: "'Work Sans', ui-sans-serif, system-ui, sans-serif" },
+  { id: 'inter', label: 'Inter', stack: "'Inter', ui-sans-serif, system-ui, sans-serif" },
 ]
 
 export interface ReaderSettings {

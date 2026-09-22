@@ -1,5 +1,5 @@
 import { useAtomValue, useSetAtom } from 'jotai'
-import { BookOpen, FilePlus2, Trash2 } from 'lucide-react'
+import { BookOpen, Check, FilePlus2, Pencil, Trash2, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { libraryAtom, refreshLibraryAtom } from '../../atoms/library'
 import type { LibraryEntry } from '../../lib/storage/types'
@@ -12,12 +12,65 @@ function LibraryRow({
   entry,
   onOpen,
   onDelete,
+  onRename,
 }: {
   entry: LibraryEntry
   onOpen: () => void
   onDelete: () => void
+  onRename: (title: string) => void
 }) {
   const percent = Math.round(entry.progress * 100)
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(entry.title)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const startEditing = () => {
+    setDraft(entry.title)
+    setEditing(true)
+  }
+
+  const commit = () => {
+    onRename(draft)
+    setEditing(false)
+  }
+
+  if (editing) {
+    return (
+      <li className={styles.row}>
+        <form
+          className={styles.rowEditForm}
+          onSubmit={(event) => {
+            event.preventDefault()
+            commit()
+          }}
+        >
+          <BookOpen size={18} className={styles.rowIcon} aria-hidden="true" />
+          <input
+            ref={inputRef}
+            className={styles.rowEditInput}
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') setEditing(false)
+            }}
+            aria-label="Titre du document"
+            autoFocus
+          />
+          <button type="submit" className={styles.rowIconButton} aria-label="Valider le titre">
+            <Check size={16} aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className={styles.rowIconButton}
+            onClick={() => setEditing(false)}
+            aria-label="Annuler"
+          >
+            <X size={16} aria-hidden="true" />
+          </button>
+        </form>
+      </li>
+    )
+  }
 
   return (
     <li className={styles.row}>
@@ -32,7 +85,15 @@ function LibraryRow({
       </button>
       <button
         type="button"
-        className={styles.rowDelete}
+        className={styles.rowIconButton}
+        onClick={startEditing}
+        aria-label={`Renommer « ${entry.title} »`}
+      >
+        <Pencil size={15} aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        className={styles.rowIconButton}
         onClick={onDelete}
         aria-label={`Retirer « ${entry.title} » de la bibliothèque`}
       >
@@ -45,7 +106,7 @@ function LibraryRow({
 export function LibraryView() {
   const entries = useAtomValue(libraryAtom)
   const refreshLibrary = useSetAtom(refreshLibraryAtom)
-  const { importFile, openEntry, deleteEntry, importing, error } = useLibraryActions()
+  const { importFile, openEntry, deleteEntry, renameEntry, importing, error } = useLibraryActions()
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
 
@@ -113,6 +174,7 @@ export function LibraryView() {
                 entry={entry}
                 onOpen={() => void openEntry(entry)}
                 onDelete={() => void deleteEntry(entry.id)}
+                onRename={(title) => void renameEntry(entry.id, title)}
               />
             ))}
           </ul>

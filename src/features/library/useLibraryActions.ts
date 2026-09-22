@@ -131,5 +131,15 @@ export function useLibraryActions() {
     [refreshLibrary],
   )
 
-  return { importFile, openEntry, deleteEntry, importing, error }
+  const renameEntry = useCallback(
+    async (id: string, title: string) => {
+      const trimmed = title.trim()
+      if (trimmed.length === 0) return
+      await updateEntry(id, { title: trimmed })
+      await refreshLibrary()
+    },
+    [refreshLibrary],
+  )
+
+  return { importFile, openEntry, deleteEntry, renameEntry, importing, error }
 }

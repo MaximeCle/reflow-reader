@@ -138,8 +138,9 @@
   color: var(--color-muted);
 }
 
-.rowDelete {
+.rowIconButton {
   display: grid;
+  flex-shrink: 0;
   place-items: center;
   width: 32px;
   height: 32px;
@@ -151,17 +152,47 @@
   transition: opacity var(--transition), color var(--transition);
 }
 
-.row:hover .rowDelete,
-.rowDelete:focus-visible {
+.row:hover .rowIconButton,
+.rowIconButton:focus-visible {
   opacity: 1;
 }
 
-.rowDelete:hover {
+.rowIconButton:hover {
   color: var(--color-accent);
 }
 
 @media (hover: none) {
-  .rowDelete {
+  .rowIconButton {
     opacity: 1;
   }
+}
+
+.rowEditForm {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+}
+
+.rowEditInput {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-reading);
+  font-size: 16px;
+}
+
+.rowEditInput:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -1px;
+}
+
+/* The confirm/cancel controls are the only way out of edit mode: always visible. */
+.rowEditForm .rowIconButton {
+  opacity: 1;
 }
